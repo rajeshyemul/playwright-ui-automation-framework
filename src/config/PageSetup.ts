@@ -1,21 +1,25 @@
 import { test as base, Page, BrowserContext, TestInfo } from '@playwright/test';
 import { Logger } from '@helper/logger/Logger';
+import { AllureReporter } from '@helper/reporting/AllureReporter';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
- * PageSetup - Global test lifecycle management
  * 
- * CHANGES FROM OLD VERSION:
- * - Removed setPageFixture (no longer needed)
- * - Removed static PageActions calls
- * - Simplified - fixtures handle everything now
- * 
- * WHAT THIS FILE DOES NOW:
+ * * WHAT THIS FILE DOES NOW:
  * - beforeAll: One-time setup for all tests
  * - beforeEach: Per-test setup (if needed)
  * - afterEach: Per-test cleanup (if needed)
  * - afterAll: Final cleanup
  * 
  * NOTE: Page/Context lifecycle is handled by PageFixture.ts
+ * PageSetup - Global test lifecycle with auto-capture on failure
+ * 
+ * ENHANCEMENTS:
+ * ✅ Auto-screenshot on failure
+ * ✅ Auto-video attachment on failure
+ * ✅ Auto-HTML snapshot on failure
+ * ✅ Auto-console logs on failure
  */
 
 base.beforeAll(async () => {
@@ -23,29 +27,32 @@ base.beforeAll(async () => {
   Logger.info('Test Suite Starting');
   Logger.info('='.repeat(80));
   
-  // Any global setup here
-  // Examples:
-  // - Start mock server
-  // - Seed test database
-  // - Initialize test data
-  // - Set up global configurations
+  AllureReporter.logEnvironmentInfo();
 });
 
 base.beforeEach(async ({ page, context }, testInfo: TestInfo) => {
   Logger.info('-'.repeat(80));
   Logger.info(`Test Starting: ${testInfo.title}`);
   Logger.info(`Worker: ${testInfo.parallelIndex + 1}`);
+  Logger.info(`Project: ${testInfo.project.name}`);
   Logger.info('-'.repeat(80));
   
-  // Optional: Set default timeout
-  testInfo.setTimeout(60000); // 60 seconds per test
+  // Set default timeout
+  testInfo.setTimeout(60000);
   
-  // Optional: Log test metadata
-  Logger.info(`Browser: ${context.browser()?.browserType().name()}`);
-  Logger.info(`Viewport: ${page.viewportSize()?.width}x${page.viewportSize()?.height}`);
+  // Log browser info
+  const browserName = context.browser()?.browserType().name();
+  const viewport = page.viewportSize();
+  Logger.info(`Browser: ${browserName}`);
+  Logger.info(`Viewport: ${viewport?.width}x${viewport?.height}`);
   
-  // NOTE: We don't need to call PageActions.setPage() anymore!
-  // PageFixture handles this automatically
+  // Collect console logs for potential debugging
+  page.on('console', msg => {
+    const type = msg.type();
+    if (type === 'error' || type === 'warning') {
+      Logger.warn(`Browser ${type}: ${msg.text()}`);
+    }
+  });
 });
 
 base.afterEach(async ({ page }, testInfo: TestInfo) => {
@@ -56,37 +63,71 @@ base.afterEach(async ({ page }, testInfo: TestInfo) => {
   Logger.info(`Test Finished: ${testInfo.title}`);
   Logger.info(`Status: ${testStatus}`);
   Logger.info(`Duration: ${testDuration}ms`);
-  Logger.info('-'.repeat(80));
   
-  // Take screenshot on failure
-  if (testStatus === 'failed') {
-    const screenshotPath = `screenshots/failure-${testInfo.title.replace(/\s+/g, '-')}-${Date.now()}.png`;
-    await page.screenshot({ 
-      path: screenshotPath, 
-      fullPage: true 
-    });
-    Logger.error(`Screenshot saved: ${screenshotPath}`);
+  // ========================================
+  // AUTO-CAPTURE ON FAILURE
+  // ========================================
+  if (testStatus === 'failed' || testStatus === 'timedOut') {
+    Logger.error(`Test failed: ${testInfo.title}`);
+    
+    try {
+      // 1. Capture screenshot
+      const screenshot = await page.screenshot({ 
+        fullPage: true,
+        timeout: 5000 
+      });
+      await AllureReporter.attachScreenshot(
+        `failure-screenshot-${testInfo.title.replace(/\s+/g, '-')}`,
+        screenshot
+      );
+      Logger.info('✅ Screenshot attached to Allure');
+      
+      // 2. Capture HTML snapshot
+      const htmlContent = await page.content();
+      await AllureReporter.attachHTML('page-source', htmlContent);
+      Logger.info('✅ HTML snapshot attached to Allure');
+      
+      // 3. Capture current URL
+      const currentUrl = page.url();
+      await AllureReporter.attachText('current-url', currentUrl);
+      Logger.info(`✅ Current URL attached: ${currentUrl}`);
+      
+      // 4. Capture page title
+      const pageTitle = await page.title();
+      await AllureReporter.attachText('page-title', pageTitle);
+      
+      // 5. Capture browser console logs (if any errors)
+      const errors = testInfo.errors;
+      if (errors.length > 0) {
+        await AllureReporter.attachJSON('test-errors', errors);
+      }
+      
+    } catch (captureError) {
+      Logger.error(`Failed to capture failure artifacts: ${captureError}`);
+    }
   }
   
-  // NOTE: Context/Page cleanup is automatic - don't need to close manually
+  // ========================================
+  // AUTO-ATTACH VIDEO (if available)
+  // ========================================
+  if (testStatus === 'failed' || testStatus === 'timedOut') {
+    // Video path will be available after test completion
+    // Playwright saves videos automatically if configured
+    const videoPath = await page.video()?.path().catch(() => null);
+    if (videoPath && fs.existsSync(videoPath)) {
+      await AllureReporter.attachVideo('test-recording', videoPath);
+      Logger.info('✅ Video attached to Allure');
+    }
+  }
+  
+  Logger.info('-'.repeat(80));
 });
 
 base.afterAll(async () => {
   Logger.info('='.repeat(80));
   Logger.info('Test Suite Completed');
   Logger.info('='.repeat(80));
-  
-  // Any global cleanup here
-  // Examples:
-  // - Stop mock server
-  // - Clean up test database
-  // - Generate reports
 });
 
-/**
- * Export the base test for use in other setup files if needed
- * 
- * NOTE: Most tests should import from PageFixture.ts, not here
- */
 export const test = base;
 export { expect } from '@playwright/test';

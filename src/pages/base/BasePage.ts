@@ -9,6 +9,8 @@ import { AssertUtils } from '@helper/asserts/AssertUtils';
 import { ExpectUtils } from '@helper/asserts/ExpectUtils';
 import { WaitUtils } from '@helper/waits/WaitUtils';
 import { Logger } from '@helper/logger/Logger';
+import { StepRunner } from '@helper/reporting/StepRunner';
+import { UrlConstants } from '@support/constants/urlConstants';
 
 /**
  * BasePage - Lean base class that provides access to all helpers
@@ -118,9 +120,11 @@ export abstract class BasePage {
    */
   async navigate(): Promise<void> {
     const pageName = this.constructor.name;
-    Logger.info(`Navigating to ${pageName}`);
-    await this.pageActions.gotoURL(this.pageUrl, pageName);
-    await this.waitForPageLoad();
+    await StepRunner.run(`${pageName} - navigation`, async () => {
+      Logger.info(`Navigating to ${pageName}`);
+      await this.pageActions.gotoURL(this.pageUrl, pageName);
+      await this.waitForPageLoad();
+    });
   }
 
   /**
@@ -141,8 +145,11 @@ export abstract class BasePage {
    * Delegates to: expectUtils.toHaveTitle()
    */
   async verifyPageLoaded(): Promise<void> {
-    await this.expectUtils.expectPageToHaveTitle(this.pageTitle, `${this.constructor.name} title verification`, "Page title does not match expected");
-    Logger.info(`${this.constructor.name} title verified`);
+    const pageName = this.constructor.name;
+    await StepRunner.run(`${pageName} - title verification`, async () => {
+      await this.expectUtils.expectPageToHaveTitle(this.pageTitle, `${pageName} title verification`, "Page title does not match expected");
+      Logger.info(`${pageName} title verified`);
+    });
   }
 
   /**
@@ -157,10 +164,29 @@ export abstract class BasePage {
   }
 
   /**
+   * Logout from the application from any authenticated page.
+   */
+  async logout(): Promise<void> {
+    const pageName = this.constructor.name;
+    await StepRunner.run(`${pageName} - logout`, async () => {
+      Logger.info(`Logging out from ${pageName}`);
+      await this.pageActions.gotoURL(UrlConstants.LOGOUT_PAGE, 'Logout page');
+      await this.waitForPageLoad();
+    });
+  }
+
+  /**
    * Get current URL
    */
   getCurrentUrl(): string {
     return this.page.url();
+  }
+
+  /**
+   * Get current page title
+   */
+  async getCurrentTitle(): Promise<string> {
+    return await this.page.title();
   }
 
   // ========================================
