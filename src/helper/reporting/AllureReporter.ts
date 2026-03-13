@@ -20,18 +20,25 @@ export class AllureReporter {
    * USAGE:
    * await AllureReporter.attachDetails({
    *   epic: Epic.UI_TESTING,
-   *   feature: Feature.LOGIN,
-   *   story: 'User can login with valid credentials',
+   *   feature: Feature.PAGE_LOAD,
+   *   story: 'User can load home page',
    *   severity: Severity.CRITICAL,
    *   owner: TestOwners.USER_01,
    *   description: 'Test description',
-   *   tags: ['tag1', 'tag2'],
+   *   tags: ['smoke', 'home'],
    *   issues: ['JIRA-123'],
    *   tmsIds: ['TC-001'],
-   *   component: 'LoginComponent'
+   *   links: [{ name: 'Documentation', url: 'https://playwright.dev' }]
    * });
+   *
+   * NOTE: Currently using annotations for all metadata since labels property
+   * is not available in this Playwright version. Future versions may support
+   * proper labels vs annotations separation.
    */
   static async attachDetails(meta: AllureMeta): Promise<void> {
+    // Core Allure metadata - using annotations (labels property not available in this Playwright version)
+    // Ideally these should be labels: test.info().labels.push({ name: 'epic', value: meta.epic })
+    // But for now using annotations which Allure will still process
     if (meta.epic) {
       test.info().annotations.push({ type: 'epic', description: meta.epic });
     }
@@ -59,6 +66,8 @@ export class AllureReporter {
     if (meta.tags) {
       meta.tags.forEach((tag) => test.info().annotations.push({ type: 'tag', description: tag }));
     }
+
+    // External references - properly using annotations
     if (meta.issues) {
       meta.issues.forEach((issue) =>
         test.info().annotations.push({ type: 'issue', description: issue })
@@ -67,6 +76,11 @@ export class AllureReporter {
     if (meta.tmsIds) {
       meta.tmsIds.forEach((tmsId) =>
         test.info().annotations.push({ type: 'tms', description: tmsId })
+      );
+    }
+    if (meta.links) {
+      meta.links.forEach((link) =>
+        test.info().annotations.push({ type: 'link', description: `${link.name}: ${link.url}` })
       );
     }
     if (meta.description) {

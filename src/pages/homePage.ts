@@ -26,6 +26,24 @@ export class HomePage extends BasePage {
     });
   }
 
+  /**
+   * Verify login form is visible on home page
+   */
+  public async verifyLoginFormVisible(): Promise<void> {
+    await StepRunner.run('Home Page - verify login form', async () => {
+      await this.expectUtils.expectElementToBeVisible(
+        HomePageLocators.USERNAME_FIELD,
+        'Username field',
+        'Username field not visible on home page'
+      );
+      await this.expectUtils.expectElementToBeVisible(
+        HomePageLocators.PASSWORD_FIELD,
+        'Password field',
+        'Password field not visible on home page'
+      );
+    });
+  }
+
   public async verifyTitle(expected: RegExp): Promise<void> {
     await StepRunner.run('Home Page - verify page title', async () => {
       await this.expectUtils.expectPageToHaveTitle(

@@ -3,6 +3,7 @@
 import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { Logger } from '../logger/Logger';
 
 export class GenerateReports {
   private static readonly REPORT_ROOT = path.resolve(process.cwd(), 'reports');
@@ -53,14 +54,14 @@ export class GenerateReports {
 
     exec(command, (error, stdout, stderr) => {
       if (error) {
-        console.error(`Failed to open HTML report: ${error.message}`);
+        Logger.error(`Failed to open HTML report: ${error.message}`);
         return;
       }
       if (stderr) {
-        console.error(stderr);
+        Logger.error(stderr);
         return;
       }
-      console.log(stdout);
+      Logger.info(stdout);
     });
   }
 
@@ -86,14 +87,14 @@ export class GenerateReports {
 
     exec(command, (error, stdout, stderr) => {
       if (error) {
-        console.error(`Allure generation failed: ${error.message}`);
+        Logger.error(`Allure generation failed: ${error.message}`);
         return;
       }
       if (stderr) {
-        console.error(stderr);
+        Logger.error(stderr);
         return;
       }
-      console.log(stdout);
+      Logger.info(stdout);
     });
   }
 }
@@ -108,7 +109,7 @@ if (require.main === module) {
     const open = process.argv.includes('--open');
     GenerateReports.generateAllureReport(open);
   } else {
-    console.log(`
+    Logger.info(`
 Usage:
   npx ts-node src/helper/reporting/GenerateReports.ts html
   npx ts-node src/helper/reporting/GenerateReports.ts allure [--open]
