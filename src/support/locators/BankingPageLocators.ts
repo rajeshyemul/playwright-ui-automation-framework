@@ -6,6 +6,9 @@ export class AccountOverviewPageLocators {
   static readonly ACCOUNT_TYPE = 'td:nth-child(2)';
   static readonly WELCOME_MESSAGE = '#rightPanel h1';
   static readonly ACCOUNT_SUMMARY = '#accountSummary';
+  static readonly ACCOUNT_DETAILS = '#accountDetails';
+  static readonly TRANSACTION_TABLE = '#transactionTable';
+  static readonly TRANSACTION_ROWS = '#transactionTable tbody tr';
 }
 
 export class TransferFundsPageLocators {
@@ -14,6 +17,7 @@ export class TransferFundsPageLocators {
   static readonly TO_ACCOUNT_SELECT = '[name="toAccountId"]';
   static readonly TRANSFER_BUTTON = '[value="Transfer"]';
   static readonly SUCCESS_MESSAGE = '#rightPanel .success';
+  static readonly ERROR_MESSAGE = '#rightPanel .error';
   static readonly TITLE = '#rightPanel h1';
 }
 
@@ -29,6 +33,7 @@ export class BillPayPageLocators {
   static readonly AMOUNT = '[name="amount"]';
   static readonly SEND_PAYMENT_BUTTON = '[value="Send Payment"]';
   static readonly SUCCESS_MESSAGE = '#rightPanel .success';
+  static readonly ERROR_MESSAGE = '#rightPanel .error';
   static readonly TITLE = '#rightPanel h1';
 }
 

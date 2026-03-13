@@ -10,6 +10,7 @@ import { ExpectUtils } from '@helper/asserts/ExpectUtils';
 import { WaitUtils } from '@helper/waits/WaitUtils';
 import { Logger } from '@helper/logger/Logger';
 import { StepRunner } from '@helper/reporting/StepRunner';
+import { UrlConstants } from '@support/constants/urlConstants';
 
 /**
  * BasePage - Lean base class that provides access to all helpers
@@ -160,6 +161,18 @@ export abstract class BasePage {
     Logger.info(`Reloading ${this.constructor.name}`);
     await this.pageActions.reloadPage();
     await this.waitForPageLoad();
+  }
+
+  /**
+   * Logout from the application from any authenticated page.
+   */
+  async logout(): Promise<void> {
+    const pageName = this.constructor.name;
+    await StepRunner.run(`${pageName} - logout`, async () => {
+      Logger.info(`Logging out from ${pageName}`);
+      await this.pageActions.gotoURL(UrlConstants.LOGOUT_PAGE, 'Logout page');
+      await this.waitForPageLoad();
+    });
   }
 
   /**

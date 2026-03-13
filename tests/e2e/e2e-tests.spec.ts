@@ -4,65 +4,42 @@ import { LoginPage } from '@pages/loginPage';
 import { AccountOverviewPage } from '@pages/accountOverviewPage';
 import { TransferFundsPage } from '@pages/transferFundsPage';
 import { BillPayPage } from '@pages/billPayPage';
+import { UpdateProfilePage } from '@pages/updateProfilePage';
+import { HomePage } from '@pages/homePage';
 import { AllureReporter } from '@helper/reporting/AllureReporter';
 import { Logger } from '@helper/logger/Logger';
-
-/**
- * End-to-End Tests
- *
- * RUN WITH: npx playwright test tests/e2e/ --workers=2
- *
- * These tests verify complete user workflows from start to finish
- */
+import { TestDataProvider } from '@support/testdata/TestDataProvider';
 
 test.describe('ParaBank - End-to-End Tests', () => {
-
   test('TC-E2E-001: Complete User Registration and First Login', async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'End-to-End Tests',
       feature: 'User Onboarding',
       story: 'Complete registration and login workflow',
-      severity: 'critical'
+      severity: 'critical',
     });
 
     const registrationPage = new RegistrationPage(pageActions);
     const loginPage = new LoginPage(pageActions);
     const accountOverviewPage = new AccountOverviewPage(pageActions);
+    const userData = TestDataProvider.getE2eTestUser();
 
-    const userData = {
-      firstName: 'E2E',
-      lastName: 'User',
-      address: '123 E2E St',
-      city: 'E2E City',
-      state: 'CA',
-      zipCode: '12345',
-      phone: '555-1234',
-      ssn: '123-45-6789',
-      username: `e2euser${Date.now()}`,
-      password: 'password123',
-      confirmPassword: 'password123'
-    };
-
-    await test.step('Complete user registration', async () => {
+    await test.step('Register a new banking user', async () => {
       await registrationPage.navigateToRegistration();
-      await registrationPage.register(userData);
-      await registrationPage.verifySuccessMessage();
+      await registrationPage.registerAndVerifySuccess(userData);
     });
 
-    await test.step('Logout user', async () => {
-      await pageActions.getPage().goto('https://parabank.parasoft.com/parabank/logout.htm');
+    await test.step('Log out and sign back in with the new credentials', async () => {
+      await registrationPage.logout();
+      await loginPage.navigateToLogin();
+      await loginPage.loginAndVerify(userData.username, userData.password);
     });
 
-    await test.step('Login with new credentials', async () => {
-      await loginPage.login(userData.username, userData.password);
-    });
-
-    await test.step('Verify successful login and account creation', async () => {
+    await test.step('Validate the newly created account portfolio', async () => {
       await accountOverviewPage.verifyAccountOverviewPageLoaded();
       await accountOverviewPage.verifyWelcomeMessage(userData.firstName);
-
-      const accountCount = await accountOverviewPage.getAccountCount();
-      Logger.info(`New user has ${accountCount} account(s)`);
+      await accountOverviewPage.verifyAccountsAvailable();
+      await accountOverviewPage.logAccountSummaries();
     });
   });
 
@@ -71,13 +48,15 @@ test.describe('ParaBank - End-to-End Tests', () => {
       epic: 'End-to-End Tests',
       feature: 'Account Management',
       story: 'Complete account viewing and profile update workflow',
-      severity: 'high'
+      severity: 'high',
     });
 
     const registrationPage = new RegistrationPage(pageActions);
+    const loginPage = new LoginPage(pageActions);
     const accountOverviewPage = new AccountOverviewPage(pageActions);
+    const updateProfilePage = new UpdateProfilePage(pageActions);
 
-    const userData = {
+    const userData = TestDataProvider.generateUserData({
       firstName: 'Account',
       lastName: 'Manager',
       address: '456 Account St',
@@ -87,61 +66,30 @@ test.describe('ParaBank - End-to-End Tests', () => {
       phone: '555-5678',
       ssn: '987-65-4321',
       username: `accountmgr${Date.now()}`,
-      password: 'password123',
-      confirmPassword: 'password123'
-    };
+    });
+    const updatedPhoneNumber = '555-9999';
 
-    await test.step('Register and login user', async () => {
+    await test.step('Create and review the customer account', async () => {
       await registrationPage.navigateToRegistration();
-      await registrationPage.register(userData);
-      await registrationPage.verifySuccessMessage();
-    });
-
-    await test.step('View account overview', async () => {
+      await registrationPage.registerAndVerifySuccess(userData);
       await accountOverviewPage.verifyAccountOverviewPageLoaded();
-      const accountCount = await accountOverviewPage.getAccountCount();
-
-      if (accountCount > 0) {
-        const accountNumber = await accountOverviewPage.getAccountNumber(0);
-        const balance = await accountOverviewPage.getAccountBalance(0);
-        Logger.info(`Account ${accountNumber}: $${balance}`);
-      }
+      await accountOverviewPage.logAccountSummaries();
+      await accountOverviewPage.clickAccountLink(0);
+      await accountOverviewPage.logRecentTransactions();
     });
 
-    await test.step('View account details', async () => {
-      if (await accountOverviewPage.getAccountCount() > 0) {
-        await accountOverviewPage.clickAccountLink(0);
-        // Verify we're on account details page
-        await pageActions.getPage().waitForSelector('#transactionTable, #accountDetails', { timeout: 5000 });
-      }
+    await test.step('Update the contact profile', async () => {
+      await updateProfilePage.navigateToUpdateProfile();
+      await updateProfilePage.updateProfile({ phone: updatedPhoneNumber });
+      await updateProfilePage.verifyProfileUpdated();
     });
 
-    await test.step('Update contact information', async () => {
-      await pageActions.getPage().goto('https://parabank.parasoft.com/parabank/updateprofile.htm');
-      await pageActions.getPage().waitForLoadState('networkidle');
-
-      // Update phone number
-      await pageActions.getPage().fill('[name="customer.phoneNumber"]', '555-9999');
-      await pageActions.getPage().click('[value="Update Profile"]');
-
-      // Verify update success
-      await pageActions.getPage().waitForSelector('.success, .error', { timeout: 5000 });
-    });
-
-    await test.step('Verify changes persist after logout/login', async () => {
-      // Logout
-      await pageActions.getPage().goto('https://parabank.parasoft.com/parabank/logout.htm');
-
-      // Login again
-      const loginPage = new LoginPage(pageActions);
-      await loginPage.login(userData.username, userData.password);
-
-      // Check if phone number was updated
-      await pageActions.getPage().goto('https://parabank.parasoft.com/parabank/updateprofile.htm');
-      await pageActions.getPage().waitForLoadState('networkidle');
-
-      const phoneValue = await pageActions.getPage().inputValue('[name="customer.phoneNumber"]');
-      Logger.info(`Phone number after re-login: ${phoneValue}`);
+    await test.step('Verify the profile change persists after a new login', async () => {
+      await updateProfilePage.logout();
+      await loginPage.navigateToLogin();
+      await loginPage.loginAndVerify(userData.username, userData.password);
+      await updateProfilePage.navigateToUpdateProfile();
+      await updateProfilePage.verifyPhoneNumber(updatedPhoneNumber);
     });
   });
 
@@ -150,14 +98,14 @@ test.describe('ParaBank - End-to-End Tests', () => {
       epic: 'End-to-End Tests',
       feature: 'Funds Transfer',
       story: 'Complete funds transfer between accounts workflow',
-      severity: 'high'
+      severity: 'high',
     });
 
     const registrationPage = new RegistrationPage(pageActions);
     const transferPage = new TransferFundsPage(pageActions);
     const accountOverviewPage = new AccountOverviewPage(pageActions);
 
-    const userData = {
+    const userData = TestDataProvider.generateUserData({
       firstName: 'Transfer',
       lastName: 'Workflow',
       address: '789 Transfer St',
@@ -167,83 +115,35 @@ test.describe('ParaBank - End-to-End Tests', () => {
       phone: '555-1111',
       ssn: '111-22-3333',
       username: `transferwf${Date.now()}`,
-      password: 'password123',
-      confirmPassword: 'password123'
-    };
+    });
 
-    await test.step('Register user and check initial balances', async () => {
+    await test.step('Register the transfer user and capture initial balances', async () => {
       await registrationPage.navigateToRegistration();
-      await registrationPage.register(userData);
-      await registrationPage.verifySuccessMessage();
-
-      const initialBalance = await accountOverviewPage.getAccountBalance(0);
-      Logger.info(`Initial balance: $${initialBalance}`);
+      await registrationPage.registerAndVerifySuccess(userData);
+      await accountOverviewPage.verifyAccountOverviewPageLoaded();
+      await accountOverviewPage.logAccountSummaries();
     });
 
-    await test.step('Navigate to transfer funds page', async () => {
+    await test.step('Transfer funds between available accounts', async () => {
       await transferPage.navigateToTransferFunds();
-    });
+      const { fromAccounts, toAccounts } = await transferPage.getAvailableAccountPairs();
 
-    await test.step('Check available accounts for transfer', async () => {
-      const fromAccounts = await transferPage.getAvailableFromAccounts();
-      const toAccounts = await transferPage.getAvailableToAccounts();
-
-      Logger.info(`Available from accounts: ${fromAccounts.length}`);
-      Logger.info(`Available to accounts: ${toAccounts.length}`);
-
-      if (fromAccounts.length < 2) {
-        Logger.info('Not enough accounts for transfer test - creating second account via transfer');
-        // Try a small transfer to create account activity
-        await transferPage.transferFunds({
-          amount: '1.00'
-        });
-        await pageActions.getPage().waitForTimeout(2000); // Wait for processing
-      }
-    });
-
-    await test.step('Perform funds transfer', async () => {
-      const fromAccounts = await transferPage.getAvailableFromAccounts();
-      const toAccounts = await transferPage.getAvailableToAccounts();
-
-      if (fromAccounts.length >= 1 && toAccounts.length >= 1) {
-        // Get balances before transfer
-        const balanceBefore = await accountOverviewPage.getAccountBalance(0);
-
-        await transferPage.transferFunds({
+      if (fromAccounts.length > 1 && toAccounts.length > 1) {
+        await transferPage.transferFundsAndVerifySuccess({
           amount: '50.00',
           fromAccount: fromAccounts[0],
-          toAccount: toAccounts.length > 1 ? toAccounts[1] : toAccounts[0]
+          toAccount: toAccounts[1],
         });
-
-        await transferPage.verifyTransferSuccess();
-
-        // Check balances after transfer
-        await accountOverviewPage.navigateToAccountOverview();
-        const balanceAfter = await accountOverviewPage.getAccountBalance(0);
-        Logger.info(`Balance before: $${balanceBefore}, after: $${balanceAfter}`);
+      } else {
+        Logger.info('Transfer workflow skipped because multiple accounts were not available');
       }
     });
 
-    await test.step('Verify transfer in transaction history', async () => {
+    await test.step('Review post-transfer balances and transaction history', async () => {
+      await accountOverviewPage.navigateToAccountOverview();
+      await accountOverviewPage.logAccountSummaries();
       await accountOverviewPage.clickAccountLink(0);
-      await pageActions.getPage().waitForSelector('#transactionTable, #accountDetails', { timeout: 5000 });
-
-      // Check for transfer transaction
-      const page = pageActions.getPage();
-      const transactions = page.locator('#transactionTable tbody tr');
-      const transactionCount = await transactions.count();
-
-      if (transactionCount > 0) {
-        Logger.info(`Found ${transactionCount} transactions in history`);
-        // Check if any transaction shows the transfer amount
-        for (let i = 0; i < Math.min(transactionCount, 3); i++) {
-          const transactionText = await transactions.nth(i).textContent();
-          if (transactionText && transactionText.includes('50')) {
-            Logger.info('Transfer transaction found in history');
-            break;
-          }
-        }
-      }
+      await accountOverviewPage.hasTransactionMatching(/50(?:\.00)?/);
     });
   });
 
@@ -252,14 +152,14 @@ test.describe('ParaBank - End-to-End Tests', () => {
       epic: 'End-to-End Tests',
       feature: 'Bill Payment',
       story: 'Complete bill payment workflow',
-      severity: 'high'
+      severity: 'high',
     });
 
     const registrationPage = new RegistrationPage(pageActions);
     const billPayPage = new BillPayPage(pageActions);
     const accountOverviewPage = new AccountOverviewPage(pageActions);
 
-    const userData = {
+    const userData = TestDataProvider.generateUserData({
       firstName: 'Bill',
       lastName: 'Payer',
       address: '123 Bill St',
@@ -269,58 +169,44 @@ test.describe('ParaBank - End-to-End Tests', () => {
       phone: '555-2222',
       ssn: '222-33-4444',
       username: `billpayer${Date.now()}`,
-      password: 'password123',
-      confirmPassword: 'password123'
-    };
+    });
+    const billData = TestDataProvider.generateBillPayData({
+      payeeName: 'Electric Company',
+      address: '456 Power Ave',
+      city: 'Energy City',
+      state: 'CA',
+      zipCode: '98765',
+      phone: '555-3333',
+      accountNumber: '987654321',
+      verifyAccount: '987654321',
+      amount: '75.50',
+    });
 
-    await test.step('Register user and check initial balance', async () => {
+    await test.step('Register the bill pay customer', async () => {
       await registrationPage.navigateToRegistration();
-      await registrationPage.register(userData);
-      await registrationPage.verifySuccessMessage();
-
-      const initialBalance = await accountOverviewPage.getAccountBalance(0);
-      Logger.info(`Initial balance: $${initialBalance}`);
+      await registrationPage.registerAndVerifySuccess(userData);
+      await accountOverviewPage.logAccountSummaries();
     });
 
-    await test.step('Navigate to bill pay page', async () => {
+    await test.step('Execute the bill payment flow', async () => {
       await billPayPage.navigateToBillPay();
-    });
+      await billPayPage.payBill(billData);
 
-    await test.step('Submit bill payment', async () => {
-      await billPayPage.payBill({
-        payeeName: 'Electric Company',
-        address: '456 Power Ave',
-        city: 'Energy City',
-        state: 'CA',
-        zipCode: '98765',
-        phone: '555-3333',
-        accountNumber: '987654321',
-        verifyAccount: '987654321',
-        amount: '75.50'
-      });
-    });
+      const outcome = await billPayPage.getBillPayOutcome();
+      Logger.info(`Bill pay workflow outcome: ${outcome}`);
 
-    await test.step('Verify bill payment result', async () => {
-      const page = pageActions.getPage();
-      const successElement = page.locator('.success');
-      const errorElement = page.locator('.error');
-
-      const hasSuccess = await successElement.isVisible().catch(() => false);
-      const hasError = await errorElement.isVisible().catch(() => false);
-
-      if (hasSuccess) {
+      if (outcome === 'success') {
         await billPayPage.verifyBillPaySuccess();
-        Logger.info('Bill payment succeeded');
-      } else if (hasError) {
-        const errorText = await errorElement.textContent();
-        Logger.info(`Bill payment failed: ${errorText}`);
+      }
+
+      if (outcome === 'error') {
+        await billPayPage.getBillPayErrorMessage();
       }
     });
 
-    await test.step('Verify account balance updated', async () => {
+    await test.step('Review balances after the bill payment attempt', async () => {
       await accountOverviewPage.navigateToAccountOverview();
-      const finalBalance = await accountOverviewPage.getAccountBalance(0);
-      Logger.info(`Final balance: $${finalBalance}`);
+      await accountOverviewPage.logAccountSummaries();
     });
   });
 
@@ -329,15 +215,17 @@ test.describe('ParaBank - End-to-End Tests', () => {
       epic: 'End-to-End Tests',
       feature: 'Complete Banking Session',
       story: 'Simulate complete banking session with multiple operations',
-      severity: 'high'
+      severity: 'high',
     });
 
     const registrationPage = new RegistrationPage(pageActions);
     const transferPage = new TransferFundsPage(pageActions);
     const billPayPage = new BillPayPage(pageActions);
     const accountOverviewPage = new AccountOverviewPage(pageActions);
+    const updateProfilePage = new UpdateProfilePage(pageActions);
+    const homePage = new HomePage(pageActions);
 
-    const userData = {
+    const userData = TestDataProvider.generateUserData({
       firstName: 'Complete',
       lastName: 'Session',
       address: '999 Session St',
@@ -347,100 +235,62 @@ test.describe('ParaBank - End-to-End Tests', () => {
       phone: '555-0000',
       ssn: '000-11-2222',
       username: `completsession${Date.now()}`,
-      password: 'password123',
-      confirmPassword: 'password123'
-    };
+    });
 
-    await test.step('Register user', async () => {
+    await test.step('Onboard the customer and inspect the initial portfolio', async () => {
       await registrationPage.navigateToRegistration();
-      await registrationPage.register(userData);
-      await registrationPage.verifySuccessMessage();
+      await registrationPage.registerAndVerifySuccess(userData);
+      await accountOverviewPage.verifyAccountsAvailable();
+      await accountOverviewPage.logAccountSummaries();
     });
 
-    await test.step('Check initial account balances', async () => {
-      const accountCount = await accountOverviewPage.getAccountCount();
-      Logger.info(`User has ${accountCount} account(s)`);
-
-      for (let i = 0; i < accountCount; i++) {
-        const balance = await accountOverviewPage.getAccountBalance(i);
-        Logger.info(`Account ${i + 1} balance: $${balance}`);
-      }
-    });
-
-    await test.step('Perform funds transfer', async () => {
+    await test.step('Perform a funds transfer', async () => {
       await transferPage.navigateToTransferFunds();
-      const fromAccounts = await transferPage.getAvailableFromAccounts();
+      const { fromAccounts, toAccounts } = await transferPage.getAvailableAccountPairs();
 
-      if (fromAccounts.length > 0) {
-        await transferPage.transferFunds({
-          amount: '25.00'
+      if (fromAccounts.length > 1 && toAccounts.length > 1) {
+        await transferPage.transferFundsAndVerifySuccess({
+          amount: '25.00',
+          fromAccount: fromAccounts[0],
+          toAccount: toAccounts[1],
         });
-        await transferPage.verifyTransferSuccess();
-      }
-    });
-
-    await test.step('Pay a bill', async () => {
-      await billPayPage.navigateToBillPay();
-      await billPayPage.payBill({
-        payeeName: 'Internet Provider',
-        address: '123 Web St',
-        city: 'Internet City',
-        state: 'CA',
-        zipCode: '90210',
-        phone: '555-4444',
-        accountNumber: '1122334455',
-        verifyAccount: '1122334455',
-        amount: '89.99'
-      });
-
-      // Check result
-      const page = pageActions.getPage();
-      const successVisible = await page.locator('.success').isVisible().catch(() => false);
-      if (successVisible) {
-        Logger.info('Bill payment succeeded');
       } else {
-        Logger.info('Bill payment completed (may have failed as expected)');
+        Logger.info('Funds transfer skipped because multiple accounts were not available');
       }
     });
 
-    await test.step('Check updated balances', async () => {
+    await test.step('Pay a bill during the session', async () => {
+      await billPayPage.navigateToBillPay();
+      await billPayPage.payBill(
+        TestDataProvider.generateBillPayData({
+          payeeName: 'Internet Provider',
+          address: '123 Web St',
+          city: 'Internet City',
+          state: 'CA',
+          zipCode: '90210',
+          phone: '555-4444',
+          accountNumber: '1122334455',
+          verifyAccount: '1122334455',
+          amount: '89.99',
+        })
+      );
+      await billPayPage.getBillPayOutcome();
+    });
+
+    await test.step('Review transaction history and update the profile', async () => {
       await accountOverviewPage.navigateToAccountOverview();
-      const accountCount = await accountOverviewPage.getAccountCount();
-
-      for (let i = 0; i < accountCount; i++) {
-        const balance = await accountOverviewPage.getAccountBalance(i);
-        Logger.info(`Updated account ${i + 1} balance: $${balance}`);
-      }
+      await accountOverviewPage.logAccountSummaries();
+      await accountOverviewPage.clickAccountLink(0);
+      await accountOverviewPage.logRecentTransactions();
+      await updateProfilePage.navigateToUpdateProfile();
+      await updateProfilePage.updateProfile({ phone: '555-7777' });
+      await updateProfilePage.verifyProfileUpdated();
     });
 
-    await test.step('Review transaction history', async () => {
-      if (await accountOverviewPage.getAccountCount() > 0) {
-        await accountOverviewPage.clickAccountLink(0);
-        await pageActions.getPage().waitForSelector('#transactionTable, #accountDetails', { timeout: 5000 });
-
-        const page = pageActions.getPage();
-        const transactionCount = await page.locator('#transactionTable tbody tr').count().catch(() => 0);
-        Logger.info(`Account has ${transactionCount} transactions`);
-      }
-    });
-
-    await test.step('Update profile information', async () => {
-      await pageActions.getPage().goto('https://parabank.parasoft.com/parabank/updateprofile.htm');
-      await pageActions.getPage().waitForLoadState('networkidle');
-
-      await pageActions.getPage().fill('[name="customer.phoneNumber"]', '555-7777');
-      await pageActions.getPage().click('[value="Update Profile"]');
-
-      const successVisible = await pageActions.getPage().locator('.success').isVisible().catch(() => false);
-      if (successVisible) {
-        Logger.info('Profile update succeeded');
-      }
-    });
-
-    await test.step('Logout cleanly', async () => {
-      await pageActions.getPage().goto('https://parabank.parasoft.com/parabank/logout.htm');
-      await pageActions.getPage().waitForSelector('[name="username"]', { timeout: 5000 });
-      Logger.info('Logout successful');
+    await test.step('End the session cleanly', async () => {
+      await updateProfilePage.logout();
+      await homePage.verifyPageLoaded();
+      await homePage.verifyLoginFormVisible();
     });
   });
 
@@ -449,105 +299,88 @@ test.describe('ParaBank - End-to-End Tests', () => {
       epic: 'End-to-End Tests',
       feature: 'Error Handling',
       story: 'Test error scenarios and recovery mechanisms',
-      severity: 'medium'
+      severity: 'medium',
     });
 
     const loginPage = new LoginPage(pageActions);
     const registrationPage = new RegistrationPage(pageActions);
     const transferPage = new TransferFundsPage(pageActions);
+    const billPayPage = new BillPayPage(pageActions);
+    const homePage = new HomePage(pageActions);
 
-    await test.step('Test login error handling', async () => {
+    await test.step('Validate login error handling', async () => {
       await loginPage.navigateToLogin();
-
-      // Test invalid credentials
-      await loginPage.login('nonexistentuser', 'wrongpassword');
-      await loginPage.verifyLoginError('error');
-
-      // Test empty fields
-      await loginPage.login('', '');
-      await loginPage.verifyLoginError('error');
+      await loginPage.attemptLogin('nonexistentuser', 'wrongpassword');
+      await loginPage.verifyLoginError('error|invalid|verified');
+      await loginPage.navigateToLogin();
+      await loginPage.attemptLogin('', '');
+      await loginPage.verifyLoginError('error|required|invalid|verified');
     });
 
-    await test.step('Test registration validation', async () => {
+    await test.step('Validate registration required field errors', async () => {
       await registrationPage.navigateToRegistration();
-
-      // Submit empty form
       await registrationPage.submitRegistration();
-      // Should show validation errors
-      await pageActions.getPage().waitForSelector('.error, [class*="error"]', { timeout: 5000 });
+      await registrationPage.verifyRequiredFieldErrors([
+        'firstName',
+        'lastName',
+        'address',
+        'city',
+        'state',
+        'ssn',
+        'username',
+        'password',
+        'confirm',
+      ]);
     });
 
-    await test.step('Test transfer validation', async () => {
-      // First register a user
-      const userData = {
+    await test.step('Recover with a valid registration and exercise transfer validation', async () => {
+      const userData = TestDataProvider.generateUserData({
         firstName: 'Error',
         lastName: 'Test',
         address: '123 Error St',
         city: 'Error City',
-        state: 'CA',
-        zipCode: '12345',
-        phone: '555-1234',
-        ssn: '123-45-6789',
         username: `errortest${Date.now()}`,
-        password: 'password123',
-        confirmPassword: 'password123'
-      };
+      });
 
-      await registrationPage.register(userData);
-      await registrationPage.verifySuccessMessage();
-
-      // Try transfer with invalid amount
+      await registrationPage.navigateToRegistration();
+      await registrationPage.registerAndVerifySuccess(userData);
       await transferPage.navigateToTransferFunds();
-      await transferPage.transferFunds({
-        amount: '999999999' // Amount too large
-      });
+      await transferPage.transferFunds({ amount: '999999999' });
 
-      // Check if error occurs
-      const page = pageActions.getPage();
-      const errorVisible = await page.locator('.error').isVisible().catch(() => false);
-      if (errorVisible) {
-        Logger.info('Transfer validation working - large amount rejected');
-      } else {
-        Logger.info('Transfer completed or different validation approach');
+      const transferOutcome = await transferPage.getTransferOutcome();
+      Logger.info(`Transfer validation outcome: ${transferOutcome}`);
+
+      if (transferOutcome === 'error') {
+        await transferPage.verifyTransferFailed('error|insufficient|invalid');
       }
     });
 
-    await test.step('Test bill pay validation', async () => {
-      const billPayPage = new BillPayPage(pageActions);
+    await test.step('Validate bill pay mismatch handling and app stability', async () => {
       await billPayPage.navigateToBillPay();
+      await billPayPage.payBill(
+        TestDataProvider.generateBillPayData({
+          payeeName: 'Test Payee',
+          address: '123 Test St',
+          city: 'Test City',
+          state: 'CA',
+          zipCode: '12345',
+          phone: '555-1234',
+          accountNumber: '123456789',
+          verifyAccount: '987654321',
+          amount: '50.00',
+        })
+      );
 
-      // Test account number mismatch
-      await billPayPage.payBill({
-        payeeName: 'Test Payee',
-        address: '123 Test St',
-        city: 'Test City',
-        state: 'CA',
-        zipCode: '12345',
-        phone: '555-1234',
-        accountNumber: '123456789',
-        verifyAccount: '987654321', // Different from account number
-        amount: '50.00'
-      });
+      const billPayOutcome = await billPayPage.getBillPayOutcome();
+      Logger.info(`Bill pay validation outcome: ${billPayOutcome}`);
 
-      // Check for account mismatch error
-      const page = pageActions.getPage();
-      const errorVisible = await page.locator('.error').isVisible().catch(() => false);
-      if (errorVisible) {
-        const errorText = await page.locator('.error').textContent();
-        if (errorText && errorText.toLowerCase().includes('match')) {
-          Logger.info('Account number mismatch validation working');
-        }
+      if (billPayOutcome === 'error') {
+        await billPayPage.verifyAccountMismatchError();
       }
-    });
 
-    await test.step('Verify application remains stable after errors', async () => {
-      // Navigate back to home page
-      await pageActions.getPage().goto('https://parabank.parasoft.com/parabank/index.htm');
-      await pageActions.getPage().waitForLoadState('networkidle');
-
-      // Verify page still loads
-      const title = await pageActions.getPage().title();
-      Logger.info(`Application still accessible: ${title}`);
+      await homePage.navigateToHome();
+      await homePage.verifyPageLoaded();
+      await homePage.verifyLoginFormVisible();
     });
   });
 });

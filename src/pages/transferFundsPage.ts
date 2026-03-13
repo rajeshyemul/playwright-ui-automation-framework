@@ -3,6 +3,10 @@ import { PageActions } from '@helper/actions/PageActions';
 import { UrlConstants } from '@support/constants/urlConstants';
 import { TransferFundsPageLocators as LOCATORS } from '@support/locators/BankingPageLocators';
 import { StepRunner } from '@helper/reporting/StepRunner';
+import { Logger } from '@helper/logger/Logger';
+import { TransferData } from '@support/testdata/TestDataProvider';
+
+export type TransferOutcome = 'success' | 'error' | 'unknown';
 
 export class TransferFundsPage extends BasePage {
   protected pageUrl = UrlConstants.TRANSFER_FUNDS_PAGE;
@@ -25,11 +29,7 @@ export class TransferFundsPage extends BasePage {
   /**
    * Fill transfer form
    */
-  async fillTransferForm(transferData: {
-    amount: string;
-    fromAccount?: string;
-    toAccount?: string;
-  }): Promise<void> {
+  async fillTransferForm(transferData: TransferData): Promise<void> {
     await StepRunner.run('Transfer Funds - fill form', async () => {
       await this.editBoxActions.fill(LOCATORS.AMOUNT_FIELD, transferData.amount);
 
@@ -55,13 +55,16 @@ export class TransferFundsPage extends BasePage {
   /**
    * Complete transfer process
    */
-  async transferFunds(transferData: {
-    amount: string;
-    fromAccount?: string;
-    toAccount?: string;
-  }): Promise<void> {
+  async transferFunds(transferData: TransferData): Promise<void> {
     await this.fillTransferForm(transferData);
     await this.submitTransfer();
+  }
+
+  async transferFundsAndVerifySuccess(transferData: TransferData): Promise<void> {
+    await StepRunner.run('Transfer Funds - complete successful transfer flow', async () => {
+      await this.transferFunds(transferData);
+      await this.verifyTransferSuccess();
+    });
   }
 
   /**
@@ -85,7 +88,7 @@ export class TransferFundsPage extends BasePage {
   async verifyTransferFailed(expectedError: string): Promise<void> {
     await StepRunner.run('Transfer Funds - verify failure', async () => {
       await this.expectUtils.expectElementToHaveText(
-        '.error',
+        LOCATORS.ERROR_MESSAGE,
         'Transfer error message',
         new RegExp(expectedError),
         'Expected transfer error message not found'
@@ -110,6 +113,39 @@ export class TransferFundsPage extends BasePage {
     return await StepRunner.run('Transfer Funds - get to accounts', async () => {
       const options = await this.page.locator(`${LOCATORS.TO_ACCOUNT_SELECT} option`).allTextContents();
       return options;
+    });
+  }
+
+  async getAvailableAccountPairs(): Promise<{ fromAccounts: string[]; toAccounts: string[] }> {
+    return StepRunner.run('Transfer Funds - get all available transfer accounts', async () => {
+      const fromAccounts = await this.getAvailableFromAccounts();
+      const toAccounts = await this.getAvailableToAccounts();
+
+      Logger.info(`From accounts available: ${fromAccounts.join(', ')}`);
+      Logger.info(`To accounts available: ${toAccounts.join(', ')}`);
+
+      return { fromAccounts, toAccounts };
+    });
+  }
+
+  async getTransferOutcome(): Promise<TransferOutcome> {
+    return StepRunner.run('Transfer Funds - capture transfer outcome', async () => {
+      await this.waitUtils.waitForLoadState('networkidle');
+
+      const successVisible = await this.page.locator(LOCATORS.SUCCESS_MESSAGE).isVisible().catch(() => false);
+      if (successVisible) {
+        Logger.info('Transfer outcome detected as success');
+        return 'success';
+      }
+
+      const errorVisible = await this.page.locator(LOCATORS.ERROR_MESSAGE).isVisible().catch(() => false);
+      if (errorVisible) {
+        Logger.info('Transfer outcome detected as error');
+        return 'error';
+      }
+
+      Logger.warn('Transfer outcome could not be determined');
+      return 'unknown';
     });
   }
 }

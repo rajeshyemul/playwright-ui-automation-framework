@@ -4,6 +4,9 @@ import { UrlConstants } from '@support/constants/urlConstants';
 import { RegistrationPageLocators as LOCATORS } from '@support/locators/RegistrationPageLocators';
 import { StepRunner } from '@helper/reporting/StepRunner';
 import { Logger } from '@helper/logger/Logger';
+import { UserData } from '@support/testdata/TestDataProvider';
+
+export type RegistrationOutcome = 'success' | 'error' | 'unknown';
 
 export class RegistrationPage extends BasePage {
   protected pageUrl = UrlConstants.REGISTRATION_PAGE;
@@ -26,19 +29,7 @@ export class RegistrationPage extends BasePage {
   /**
    * Fill registration form
    */
-  async fillRegistrationForm(userData: {
-    firstName: string;
-    lastName: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    phone?: string;
-    ssn?: string;
-    username: string;
-    password: string;
-    confirmPassword?: string;
-  }): Promise<void> {
+  async fillRegistrationForm(userData: UserData): Promise<void> {
     await StepRunner.run('Registration - fill form', async () => {
       // Use editBoxActions for inputs
       await this.editBoxActions.fill(LOCATORS.FIRST_NAME, userData.firstName);
@@ -80,21 +71,26 @@ export class RegistrationPage extends BasePage {
   /**
    * Complete registration process (fill + submit)
    */
-  async register(userData: {
-    firstName: string;
-    lastName: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    phone?: string;
-    ssn?: string;
-    username: string;
-    password: string;
-    confirmPassword?: string;
-  }): Promise<void> {
+  async register(userData: UserData): Promise<void> {
     await this.fillRegistrationForm(userData);
     await this.submitRegistration();
+  }
+
+  async registerAndVerifySuccess(userData: UserData): Promise<void> {
+    await StepRunner.run('Registration - complete successful registration flow', async () => {
+      await this.register(userData);
+      await this.verifySuccessMessage();
+    });
+  }
+
+  private async getRightPanelHeading(): Promise<string> {
+    const heading = await this.page.locator('#rightPanel h1').textContent().catch(() => null);
+    return heading?.trim() || '';
+  }
+
+  private async getRightPanelMessage(): Promise<string> {
+    const message = await this.page.locator(LOCATORS.SUCCESS_PARAGRAPH).first().textContent().catch(() => null);
+    return message?.trim() || '';
   }
 
   /**
@@ -102,47 +98,28 @@ export class RegistrationPage extends BasePage {
    */
   async verifySuccessMessage(): Promise<void> {
     await StepRunner.run('Registration - verify success', async () => {
-      // Wait for navigation or page change after registration
       await this.waitUtils.waitForLoadState('networkidle');
 
-      // Check for various possible success indicators
       const currentUrl = this.page.url();
-      Logger.info(`Current URL after registration: ${currentUrl}`);
+      const headingText = await this.getRightPanelHeading();
+      const panelMessage = await this.getRightPanelMessage();
+      const accountTableVisible = await this.page.locator('#accountTable').isVisible().catch(() => false);
 
-      // Check if we're redirected to login page or account overview
-      if (currentUrl.includes('login') || currentUrl.includes('overview')) {
+      Logger.info(`Current URL after registration: ${currentUrl}`);
+      Logger.info(`Right panel heading after registration: ${headingText}`);
+      Logger.info(`Right panel message after registration: ${panelMessage}`);
+
+      const hasWelcomeHeading = /welcome/i.test(headingText);
+      const hasSuccessMessage = /account was created successfully|welcome/i.test(panelMessage);
+
+      if (currentUrl.includes('overview') || hasWelcomeHeading || hasSuccessMessage || accountTableVisible) {
         Logger.info('Registration successful - redirected to expected page');
         return;
       }
 
-      // Try to find success message with different selectors
-      try {
-        await this.waitUtils.waitForVisible(LOCATORS.SUCCESS_MESSAGE, 5000);
-        await this.expectUtils.expectElementToHaveText(
-          LOCATORS.SUCCESS_MESSAGE,
-          'Registration success message',
-          /successfully|welcome|created/i,
-          'Registration did not succeed as expected'
-        );
-      } catch (e) {
-        // If success message not found, check for welcome message or account overview elements
-        try {
-          await this.waitUtils.waitForVisible('#rightPanel h1', 5000);
-          const headingText = await this.page.locator('#rightPanel h1').textContent();
-          if (headingText && headingText.includes('Welcome')) {
-            Logger.info('Registration successful - found welcome message');
-            return;
-          }
-        } catch (e2) {
-          Logger.info('Could not find standard success indicators, checking page content...');
-          // As a fallback, just ensure we're not on the registration page anymore
-          if (!currentUrl.includes('register')) {
-            Logger.info('Registration appears successful - navigated away from registration page');
-            return;
-          }
-          throw new Error('Registration verification failed - could not find success indicators');
-        }
-      }
+      const errorText = (await this.page.locator(LOCATORS.ERROR_MESSAGE).textContent().catch(() => null))?.trim() || '';
+      Logger.warn(`Registration did not reach a confirmed success state. Error text: ${errorText || 'N/A'}`);
+      throw new Error('Registration verification failed - could not find a valid success state');
     });
   }
 
@@ -164,6 +141,52 @@ export class RegistrationPage extends BasePage {
         new RegExp(expectedError),
         'Expected error message not found'
       );
+    });
+  }
+
+  async verifyRequiredFieldErrors(fields: string[]): Promise<void> {
+    await StepRunner.run('Registration - verify required field validation errors', async () => {
+      for (const field of fields) {
+        const selector = LOCATORS.getErrorLocatorByField(field);
+        await this.expectUtils.expectElementToBeVisible(
+          selector,
+          `${field} validation error`,
+          `${field} validation error should be visible`
+        );
+      }
+    });
+  }
+
+  async getRegistrationOutcome(): Promise<RegistrationOutcome> {
+    return StepRunner.run('Registration - capture submission outcome', async () => {
+      await this.waitUtils.waitForLoadState('networkidle');
+
+      const currentUrl = this.page.url();
+      const headingText = await this.getRightPanelHeading();
+      const panelMessage = await this.getRightPanelMessage();
+      const successVisible = await this.page.locator(LOCATORS.SUCCESS_MESSAGE).isVisible().catch(() => false);
+      const usernameErrorVisible = await this.page.locator(LOCATORS.ERROR_USERNAME).isVisible().catch(() => false);
+      const genericErrorVisible = await this.page.locator(LOCATORS.ERROR_MESSAGE).isVisible().catch(() => false);
+      const accountTableVisible = await this.page.locator('#accountTable').isVisible().catch(() => false);
+
+      if (
+        successVisible ||
+        accountTableVisible ||
+        currentUrl.includes('overview') ||
+        /welcome/i.test(headingText) ||
+        /account was created successfully|welcome/i.test(panelMessage)
+      ) {
+        Logger.info('Registration outcome detected as success');
+        return 'success';
+      }
+
+      if (genericErrorVisible || usernameErrorVisible) {
+        Logger.info('Registration outcome detected as error');
+        return 'error';
+      }
+
+      Logger.warn('Registration outcome could not be determined');
+      return 'unknown';
     });
   }
 

@@ -3,6 +3,10 @@ import { PageActions } from '@helper/actions/PageActions';
 import { UrlConstants } from '@support/constants/urlConstants';
 import { BillPayPageLocators as LOCATORS } from '@support/locators/BankingPageLocators';
 import { StepRunner } from '@helper/reporting/StepRunner';
+import { Logger } from '@helper/logger/Logger';
+import { BillPayData } from '@support/testdata/TestDataProvider';
+
+export type BillPayOutcome = 'success' | 'error' | 'unknown';
 
 export class BillPayPage extends BasePage {
   protected pageUrl = UrlConstants.BILL_PAY_PAGE;
@@ -25,22 +29,12 @@ export class BillPayPage extends BasePage {
   /**
    * Fill bill payment form
    */
-  async fillBillPayForm(billData: {
-    payeeName: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    phone?: string;
-    accountNumber: string;
-    verifyAccount: string;
-    amount: string;
-  }): Promise<void> {
+  async fillBillPayForm(billData: BillPayData): Promise<void> {
     await StepRunner.run('Bill Pay - fill form', async () => {
       await this.editBoxActions.fill(LOCATORS.PAYEE_NAME, billData.payeeName);
       await this.editBoxActions.fill(LOCATORS.ADDRESS, billData.address);
       await this.editBoxActions.fill(LOCATORS.CITY, billData.city);
-      await this.dropdownActions.selectByLabel(LOCATORS.STATE, billData.state);
+      await this.editBoxActions.fill(LOCATORS.STATE, billData.state);
       await this.editBoxActions.fill(LOCATORS.ZIP_CODE, billData.zipCode);
 
       if (billData.phone) {
@@ -65,19 +59,16 @@ export class BillPayPage extends BasePage {
   /**
    * Complete bill payment process
    */
-  async payBill(billData: {
-    payeeName: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    phone?: string;
-    accountNumber: string;
-    verifyAccount: string;
-    amount: string;
-  }): Promise<void> {
+  async payBill(billData: BillPayData): Promise<void> {
     await this.fillBillPayForm(billData);
     await this.submitBillPayment();
+  }
+
+  async payBillAndVerifySuccess(billData: BillPayData): Promise<void> {
+    await StepRunner.run('Bill Pay - complete successful bill payment flow', async () => {
+      await this.payBill(billData);
+      await this.verifyBillPaySuccess();
+    });
   }
 
   /**
@@ -101,7 +92,7 @@ export class BillPayPage extends BasePage {
   async verifyBillPayFailed(expectedError: string): Promise<void> {
     await StepRunner.run('Bill Pay - verify failure', async () => {
       await this.expectUtils.expectElementToHaveText(
-        '.error',
+        LOCATORS.ERROR_MESSAGE,
         'Bill payment error message',
         new RegExp(expectedError),
         'Expected bill payment error message not found'
@@ -115,11 +106,40 @@ export class BillPayPage extends BasePage {
   async verifyAccountMismatchError(): Promise<void> {
     await StepRunner.run('Bill Pay - verify account mismatch', async () => {
       await this.expectUtils.expectElementToHaveText(
-        '.error',
+        LOCATORS.ERROR_MESSAGE,
         'Account verification error',
         /account.*number.*match/i,
         'Account number mismatch error not displayed'
       );
+    });
+  }
+
+  async getBillPayOutcome(): Promise<BillPayOutcome> {
+    return StepRunner.run('Bill Pay - capture payment outcome', async () => {
+      await this.waitUtils.waitForLoadState('networkidle');
+
+      const successVisible = await this.page.locator(LOCATORS.SUCCESS_MESSAGE).isVisible().catch(() => false);
+      if (successVisible) {
+        Logger.info('Bill pay outcome detected as success');
+        return 'success';
+      }
+
+      const errorVisible = await this.page.locator(LOCATORS.ERROR_MESSAGE).isVisible().catch(() => false);
+      if (errorVisible) {
+        Logger.info('Bill pay outcome detected as error');
+        return 'error';
+      }
+
+      Logger.warn('Bill pay outcome could not be determined');
+      return 'unknown';
+    });
+  }
+
+  async getBillPayErrorMessage(): Promise<string> {
+    return StepRunner.run('Bill Pay - get payment error message', async () => {
+      const errorText = (await this.page.locator(LOCATORS.ERROR_MESSAGE).textContent())?.trim() || '';
+      Logger.info(`Bill pay error message: ${errorText}`);
+      return errorText;
     });
   }
 }

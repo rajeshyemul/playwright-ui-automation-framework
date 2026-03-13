@@ -27,17 +27,13 @@ export class LoginPage extends BasePage {
    */
   async login(username: string, password: string): Promise<void> {
     await StepRunner.run('Login - enter credentials and submit', async () => {
-      // Use editBoxActions for typing
-      await this.editBoxActions.type('[name="username"]', username, 100);
-      await this.editBoxActions.type('[name="password"]', password, 100);
+      await this.editBoxActions.fill('[name="username"]', username);
+      await this.editBoxActions.fill('[name="password"]', password);
 
-      // Use uiActions for click with logging
       await this.uiActions.click('[type="submit"]', 'Login button');
 
-      // Use waitUtils for navigation - be more flexible with URL patterns
       await this.waitUtils.waitForNavigation(/overview|account|welcome/i);
 
-      // Use expectUtils for verification - check for common post-login elements
       const currentUrl = this.page.url();
       Logger.info(`Post-login URL: ${currentUrl}`);
 
@@ -82,11 +78,9 @@ export class LoginPage extends BasePage {
    */
   async attemptLogin(username: string, password: string): Promise<void> {
     await StepRunner.run('Login - attempt login', async () => {
-      // Use editBoxActions for typing
-      await this.editBoxActions.type('[name="username"]', username, 100);
-      await this.editBoxActions.type('[name="password"]', password, 100);
+      await this.editBoxActions.fill('[name="username"]', username);
+      await this.editBoxActions.fill('[name="password"]', password);
 
-      // Use uiActions for click with logging
       await this.uiActions.click('[type="submit"]', 'Login button');
     });
   }

@@ -1,7 +1,7 @@
 {
   "name": "pw-test-demo",
   "version": "1.0.0",
-  "description": "",
+  "description": "Enterprise-grade Playwright TypeScript UI automation framework with Allure reporting and step tracking",
   "main": "index.js",
   "scripts": {
     "test": "npx playwright test",
@@ -11,8 +11,15 @@
     "report:allure": "npx ts-node src/helper/reporting/GenerateReports.ts allure --open",
     "format": "prettier --write ."
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["playwright",
+    "typescript",
+    "ui-automation",
+    "test-framework",
+    "allure",
+    "e2e-testing",
+    "page-object-model",
+    "test-automation"],
+  "author": "Rajesh Yemul",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
