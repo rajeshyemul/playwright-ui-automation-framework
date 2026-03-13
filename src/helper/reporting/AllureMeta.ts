@@ -6,6 +6,7 @@ export type AllureMeta = {
 
   issues?: string[];
   tmsIds?: string[];
+  links?: { name: string; url: string }[];
 
   owner?: string;
   component?: string;

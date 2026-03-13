@@ -163,6 +163,13 @@ export abstract class BasePage {
     return this.page.url();
   }
 
+  /**
+   * Get current page title
+   */
+  async getCurrentTitle(): Promise<string> {
+    return await this.page.title();
+  }
+
   // ========================================
   // CONVENIENCE METHODS (OPTIONAL)
   // ========================================
