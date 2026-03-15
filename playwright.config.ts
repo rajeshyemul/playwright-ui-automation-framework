@@ -50,6 +50,7 @@ export default defineConfig({
   outputDir: path.join(REPORT_ROOT, PathConstants.FOLDER_ARTIFACTS),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
+    ['list'],
     [
       'html',
       {

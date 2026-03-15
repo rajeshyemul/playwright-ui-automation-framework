@@ -1,5 +1,5 @@
 {
-  "name": "pw-test-demo",
+  "name": "playwright-ui-automation-framework",
   "version": "1.0.0",
   "description": "Enterprise-grade Playwright TypeScript UI automation framework with Allure reporting and step tracking",
   "main": "index.js",
@@ -12,7 +12,9 @@
     "test:debug": "npx playwright test --debug",
     "report:html": "npx ts-node src/helper/reporting/GenerateReports.ts html",
     "report:allure": "npx ts-node src/helper/reporting/GenerateReports.ts allure --open",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:parallel": "npx playwright test --workers=4",
+    "test:serial": "npx playwright test --workers=1"
   },
   "keywords": ["playwright",
     "typescript",

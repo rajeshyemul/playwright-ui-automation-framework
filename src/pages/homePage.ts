@@ -2,16 +2,17 @@ import { BasePage } from './base/BasePage';
 import { HomePageLocators } from '../support/locators/HomePageLocators';
 import { HomePageConstants } from '../support/constants/HomePageConstants';
 import { StepRunner } from '../helper/reporting/StepRunner';
+import { UrlConstants } from '@support/constants/urlConstants';
 
 export class HomePage extends BasePage {
-  protected pageUrl = '/';
+  protected pageUrl = UrlConstants.HOME_PAGE;
   protected pageTitle = HomePageConstants.HomePageTitleDescription;
   protected pageReadySelector = HomePageLocators.USERNAME_FIELD;
 
   public async navigateToHome(): Promise<void> {
     await StepRunner.run('Home Page - initial load validation', async () => {
       await this.pageActions
-        .gotoURL('/', HomePageConstants.HomePageTitleDescription);
+        .gotoURL(UrlConstants.HOME_PAGE, HomePageConstants.HomePageTitleDescription);
       await this.waitUtils.waitForPageLoad();
       await this.waitUtils.waitForPageReady(this.pageReadySelector);
     });

@@ -11,7 +11,7 @@ dotenv.config();
  */
 export class ConfigManager {
   private static normalizeBaseUrl(url: string): string {
-    return url.replace(/\/+$/, '');
+    return `${url.replace(/\/+$/, '')}/`;
   }
 
   private static getEnvironmentBaseUrl(environment: Environments): string | undefined {
@@ -49,7 +49,7 @@ export class ConfigManager {
       return this.normalizeBaseUrl(environmentBaseUrl);
     }
 
-    return UrlConstants.DEFAULT_BASE_URL;
+    return this.normalizeBaseUrl(UrlConstants.DEFAULT_BASE_URL);
   }
 
   /**
