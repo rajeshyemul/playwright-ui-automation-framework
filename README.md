@@ -1,17 +1,27 @@
 # Playwright + TypeScript Automation Framework
 
-![Playwright](https://img.shields.io/badge/Playwright-v1.45-blue)
+![Playwright](https://img.shields.io/badge/Playwright-v1.57-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-This repository is a structured Playwright framework for UI automation around ParaBank-style flows.
+This repository is a structured Playwright + TypeScript UI automation framework for ParaBank-style web journeys.
 
-It separates:
+It is built around:
 
-- business flows in `tests/`
-- reusable interaction and assertion logic in `src/helper/`
-- domain behavior in `src/pages/`
-- runtime configuration and reporting in `src/config/` and `src/helper/reporting/`
+- Playwright test execution
+- Page Object Model design
+- fixture-based dependency injection
+- reusable helper layers for actions, assertions, waits, logging, and reporting
+- Allure, HTML, JSON, and JUnit reporting
+- CI and pre-commit quality gates
+
+## Read This First
+
+For a complete explanation of how the framework works internally, read:
+
+- [Framework Architecture Guide](/Users/rajesh.yemul/Desktop/playwright-typescript-ui-framework/docs/framework-architecture.md)
+
+Use this `README.md` for setup, daily usage, and repository navigation.
 
 ## Quick Start
 
@@ -31,9 +41,27 @@ cp .env.example .env
 npx playwright install
 ```
 
-### Run Your First Test
+### Recommended First Run
+
+Run the framework verification subset first. It is the safest way to confirm the local setup before running broader business suites.
 
 ```bash
+npm run test:framework
+```
+
+### Run the Main Suites
+
+```bash
+# Smallest business confidence suite
+npm run test:smoke
+
+# Broader functional suite
+npm run test:regression
+
+# End-to-end user journeys
+npm run test:integration
+
+# Full suite
 npm test
 ```
 
@@ -46,73 +74,112 @@ npm run report:allure
 
 The Allure CLI is installed as a project dependency, so no separate global Allure installation is required.
 
-## Design Goals
+## Daily Commands
 
-- Keep test specs focused on business intent
-- Centralize selectors, waits, and assertions in page objects and helpers
-- Provide repeatable reporting and artifact capture
-- Keep framework concerns separate from test scenarios
+```bash
+# Run the full suite
+npm test
 
-## Current Architecture
+# Run only smoke tests
+npm run test:smoke
 
-```text
-tests/
-  smoke/
-  regression/
-  e2e/
-  verifications.test.ts
+# Run only regression tests
+npm run test:regression
 
-src/
-  config/
-    ConfigManager.ts
-    PageSetup.ts
-  helper/
-    actions/
-    asserts/
-    logger/
-    reporting/
-    waits/
-  pages/
-  support/
+# Run only e2e tests
+npm run test:integration
+
+# Run framework verification tests
+npm run test:framework
+
+# Run in headed mode
+npm run test:headed
+
+# Run in debug mode
+npm run test:debug
+
+# Type-check the repository
+npm run type-check
+
+# Lint the repository
+npm run lint
+
+# Run the standard quality gate
+npm run validate
+
+# Format the repository
+npm run format
+
+# Open the latest Playwright HTML report
+npm run report:html
+
+# Generate and open the latest Allure report
+npm run report:allure
 ```
 
-## Project Structure
+## Framework Usage Model
+
+The intended usage pattern is:
+
+- tests orchestrate business workflows
+- fixtures provide typed dependencies
+- page objects implement page-specific behavior
+- helper classes implement reusable low-level mechanics
+- reporting and logging run automatically through framework hooks
+
+For business suites, prefer:
+
+- importing `test` from `@support/PageFixture`
+- page-object methods over raw `page` usage
+- helper utilities over duplicated wait/assert logic
+
+Framework verification tests may intentionally use lower-level APIs when validating fixture wiring or isolation behavior.
+
+## Runtime Flow
+
+At a high level:
+
+1. `playwright.config.ts` loads environment and reporting configuration.
+2. Tests import `test` from `@support/PageFixture`.
+3. `PageFixture.ts` imports `@config/PageSetup` and extends Playwright fixtures.
+4. `PageSetup.ts` registers lifecycle hooks for logging and failure artifact capture.
+5. Tests receive page objects such as `homePage`, `loginPage`, and `registrationPage`.
+6. Page objects use helper layers for actions, waits, assertions, and reporting.
+7. Reports are written to timestamped folders under `reports/`.
+
+The detailed flow is documented in the architecture guide.
+
+## Repository Structure
 
 ```text
 playwright-ui-automation-framework/
-├── tests/                 # Business suites and framework verification tests
-│   ├── smoke/             # Minimum viable health checks
-│   ├── regression/        # Broader functional coverage
-│   ├── e2e/               # End-to-end business workflows
-│   └── verifications.test.ts
+├── .github/
+│   └── workflows/
+│       └── ci.yml                    # CI quality gates
+├── .husky/
+│   └── pre-commit                    # Pre-commit enforcement
+├── docs/
+│   └── framework-architecture.md     # Full framework handbook
 ├── src/
-│   ├── config/            # Runtime config and lifecycle hooks
-│   ├── helper/            # Actions, waits, asserts, logging, reporting
-│   ├── pages/             # Page objects and domain workflows
-│   └── support/           # Constants, locators, fixtures, enums, test data
-├── reports/               # Timestamped execution outputs
-├── playwright.config.ts   # Playwright runtime configuration
-├── package.json           # Scripts and dependencies
-└── .env.example           # Sample local runtime configuration
+│   ├── config/                       # Runtime config and lifecycle hooks
+│   ├── helper/                       # Actions, waits, asserts, logging, reporting
+│   ├── pages/                        # Page objects and domain workflows
+│   ├── support/                      # Fixtures, locators, constants, enums, test data
+│   └── utils/                        # Reusable non-UI utilities
+├── tests/
+│   ├── smoke/                        # Minimum confidence suite
+│   ├── regression/                   # Broader functional coverage
+│   ├── e2e/                          # End-to-end user journeys
+│   ├── manual-test-cases/            # Manual test references
+│   ├── enhanced-reporting.test.ts    # Reporting usage examples
+│   └── verifications.test.ts         # Framework verification suite
+├── .env.example                      # Sample local runtime configuration
+├── eslint.config.mjs                 # ESLint flat config
+├── package.json                      # Scripts, dependencies, lint-staged
+├── playwright.config.ts              # Playwright runtime configuration
+├── README.md                         # Setup and usage guide
+└── tsconfig.json                     # TypeScript config and path aliases
 ```
-
-### Runtime Flow
-
-- `playwright.config.ts` builds the Playwright runtime configuration
-- `@support/PageFixture` provides the test fixtures
-- `@config/PageSetup` is imported by `PageFixture` and registers lifecycle hooks
-- page objects use action/wait/assert helpers instead of embedding low-level logic in specs
-
-## Practical Boundaries
-
-For the main business suites (`smoke`, `regression`, `e2e`), the intended pattern is:
-
-- tests orchestrate business flow
-- page objects perform UI actions
-- page objects perform validations using helper utilities
-- waits live in `WaitUtils`
-
-There are still a few framework-verification tests, such as [verifications.test.ts](/Users/rajesh.yemul/Desktop/playwright-typescript-ui-framework/tests/verifications.test.ts), that intentionally use lower-level APIs to validate fixture wiring and isolation. Those are framework checks, not examples of preferred business-test style.
 
 ## Reporting
 
@@ -125,61 +192,13 @@ Typical outputs include:
 - JSON report
 - Allure results
 - screenshots, videos, traces, and failure attachments
-
-## Commands
-
-```bash
-# Run all tests
-npm run test
-
-# Run smoke suite
-npm run test:smoke
-
-# Run regression suite
-npm run test:regression
-
-# Run end-to-end suite
-npm run test:integration
-
-# Run tests headed
-npm run test:headed
-
-# Run tests in debug mode
-npm run test:debug
-
-# Generate/open latest Playwright HTML report
-npm run report:html
-
-# Generate and open latest Allure report
-npm run report:allure
-```
-
-## Example Test
-
-```typescript
-import { test } from '@support/PageFixture';
-import { AllureReporter } from '@helper/reporting/AllureReporter';
-
-test('should verify home page', async ({ homePage }) => {
-  await AllureReporter.attachDetails({
-    epic: 'Smoke Tests',
-    feature: 'Home Page',
-    story: 'Verify the home page is available',
-    severity: 'critical',
-  });
-
-  await homePage.navigateToHome();
-  await homePage.verifyPageLoaded();
-  await homePage.verifyLogoVisible();
-  await homePage.verifyLoginFormVisible();
-});
-```
+- run-specific framework log files
 
 ## Environment Configuration
 
 Common runtime controls live in a local `.env` file based on `.env.example`.
 
-Examples:
+Important values:
 
 - `BROWSER=chromium|firefox|webkit`
 - `ENVIRONMENT=DEV|QA|STAGE|PROD`
@@ -187,8 +206,11 @@ Examples:
 - `RETRIES=0|1|2`
 - `WORKERS=2`
 - `BASE_URL=https://...`
+- `CI=true|false`
+- `CI_WORKERS=1`
+- `LOG_LEVEL=info|debug|warn|error`
 
-If `BASE_URL` is not set, the framework will fall back to an environment-specific URL if configured, and then to the default ParaBank URL.
+If `BASE_URL` is not set, the framework falls back to the configured environment-specific URL and then to the default ParaBank URL.
 
 Sample `.env.example`:
 
@@ -211,6 +233,48 @@ PROJECT=
 VIDEO_CI=true
 ```
 
+## Quality Gates
+
+The repository now includes both local and remote enforcement.
+
+### Local
+
+- Husky pre-commit hook runs `lint-staged`
+- staged code files run through ESLint fix
+- staged docs/config files run through Prettier
+
+### CI
+
+GitHub Actions runs:
+
+- dependency installation
+- Playwright browser installation
+- type-check
+- lint
+- framework verification tests
+- `npm pack --dry-run`
+
+## Example Test
+
+```typescript
+import { test } from '@support/PageFixture';
+import { AllureReporter } from '@helper/reporting/AllureReporter';
+
+test('should verify home page', async ({ homePage }) => {
+  await AllureReporter.attachDetails({
+    epic: 'Smoke Tests',
+    feature: 'Home Page',
+    story: 'Verify the home page is available',
+    severity: 'critical',
+  });
+
+  await homePage.navigateToHome();
+  await homePage.verifyPageLoaded();
+  await homePage.verifyLogoVisible();
+  await homePage.verifyLoginFormVisible();
+});
+```
+
 ## Current Conventions
 
 - Prefer importing `test` from `@support/PageFixture`
@@ -218,3 +282,18 @@ VIDEO_CI=true
 - Keep selectors in locator files where practical
 - Keep reusable waits in `WaitUtils`
 - Use logger/reporting helpers instead of ad hoc console output
+- Keep business flow in tests and low-level mechanics in helper layers
+
+## Next Reference
+
+If you are trying to understand:
+
+- how `PageSetup` works
+- how `PageFixture` injects dependencies
+- why the framework uses these helper layers
+- what each file does
+- what happens if a layer is bypassed
+
+read:
+
+- [Framework Architecture Guide](/Users/rajesh.yemul/Desktop/playwright-typescript-ui-framework/docs/framework-architecture.md)
