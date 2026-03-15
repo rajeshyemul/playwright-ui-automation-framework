@@ -42,11 +42,11 @@ export class LoginPage extends BasePage {
       // Check for account overview page indicators
       try {
         await this.expectUtils.expectElementToBeVisible('#accountTable', 'Account table', 'Account table not visible after login');
-      } catch (e) {
+      } catch {
         // Fallback: check for welcome message or other indicators
         try {
           await this.expectUtils.expectElementToBeVisible('#rightPanel h1', 'Welcome header', 'Welcome header not visible after login');
-        } catch (e2) {
+        } catch {
           Logger.info('Could not find standard post-login elements, checking URL pattern...');
           await this.expectUtils.expectPageToHaveURL(/overview|account|welcome/i, 'Post-login URL verification', 'Did not navigate to expected page after login');
         }
@@ -102,6 +102,6 @@ export class LoginPage extends BasePage {
    * Get current page title
    */
   async getCurrentTitle(): Promise<string> {
-    return await this.page.title();
+    return this.page.title();
   }
 }

@@ -19,10 +19,13 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('ParaBank - Smoke Tests', () => {
   const smokeUser = TestDataProvider.generateUserData({
-    firstName: 'Smoke',
-    lastName: 'Journey',
-    address: '123 Smoke Journey St',
-    city: 'Smoke City',
+    firstName: 'Kavya',
+    lastName: 'Menon',
+    address: '18 Park Street',
+    city: 'Kolkata',
+    state: 'West Bengal',
+    zipCode: '700016',
+    phone: '9830012345',
   });
 
   test('TC-SMK-001: Visitor can access the banking entry page', async ({ homePage }) => {

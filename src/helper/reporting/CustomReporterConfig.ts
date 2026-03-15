@@ -125,7 +125,6 @@ export default class CustomReporterConfig implements Reporter {
   }
 
   async onExit(): Promise<void> {
-    let updatedContent: string;
     const xmlResult = await parseLatestXML();
     const totalTests = parseInt(xmlResult.tests);
     const failedTests = parseInt(xmlResult.failures);
@@ -151,28 +150,6 @@ async function parseLatestXML(): Promise<ParsedXML> {
   const xmlString = FileUtils.getFileContent(filePath, 'utf-8');
   const result = await xml2js.parseStringPromise(xmlString);
   return result.testsuites.$;
-}
-
-/**
- * Removes all empty `.log` files from the specified directory.
- *
- * This function scans the given directory, checks each `.log` file,
- * and deletes it if its file size is 0 bytes. Non-log files or
- * non-empty log files remain untouched.
- *
- * @param directory - The path to the directory where log files are located.
- */
-async function cleanEmptyLogs(directory: string) {
-  if (!fs.existsSync(directory)) return;
-  fs.readdirSync(directory).forEach((file) => {
-    const filePath = path.join(directory, file);
-    if (file.endsWith('.log')) {
-      const stats = fs.statSync(filePath);
-      if (stats.size === 0) {
-        fs.unlinkSync(filePath);
-      }
-    }
-  });
 }
 
 /**
@@ -244,19 +221,4 @@ async function clearLogs(max: number) {
     fs.rmSync(fullPath, { force: true });
     Logger.consoleOnly?.(`Deleted Logs: ${file}`);
   });
-}
-
-async function failedTestTags(): Promise<string[][]> {
-  const regex = /<failure.*?type="FAILURE">([\s\S]*?)<\/failure>/g;
-  const filePath = path.join(GenerateReports.getLatestRunFolder(), '/results/results.xml');
-  const xmlString: string = FileUtils.getFileContent(filePath, 'utf-8');
-  const extractedTags: string[][] = []; // To store multidimensional array
-  const matches = xmlString.match(/<failure.*?type="FAILURE">/g);
-  if (matches) {
-    for (const mat of matches) {
-      const tags = mat.match(regex);
-      extractedTags.push(tags!);
-    }
-  }
-  return extractedTags;
 }

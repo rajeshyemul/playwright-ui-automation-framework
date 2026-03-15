@@ -6,6 +6,8 @@ import { Feature } from '@support/enums/allureReports/Feature';
 import { Severity } from '@support/enums/allureReports/Severity';
 import { TestOwners } from '@support/enums/allureReports/TestOwners';
 
+const runFailureDemo = process.env.RUN_FAILURE_DEMOS === 'true';
+
 test.describe('Enhanced Reporting Examples', () => {
   
   test('Example 1: Basic reporting with steps', async ({ homePage }) => {
@@ -92,7 +94,7 @@ test.describe('Enhanced Reporting Examples', () => {
     
     await AllureReporter.attachJSON('Page Info', {
       url: await pageActions.getCurrentUrl(),
-      title: homePage.getCurrentTitle(),
+      title: await homePage.getCurrentTitle(),
       timestamp: new Date().toISOString(),
     });
   });
@@ -120,6 +122,11 @@ test.describe('Enhanced Reporting Examples', () => {
       },
     ]);
   });
+
+  test.skip(
+    !runFailureDemo,
+    'Set RUN_FAILURE_DEMOS=true to execute the intentional failure example.'
+  );
 
   test('Example 6: Intentional failure to show auto-capture', async ({ homePage }) => {
     await AllureReporter.attachDetails({

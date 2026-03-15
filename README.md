@@ -7,6 +7,7 @@
 This repository is a structured Playwright framework for UI automation around ParaBank-style flows.
 
 It separates:
+
 - business flows in `tests/`
 - reusable interaction and assertion logic in `src/helper/`
 - domain behavior in `src/pages/`
@@ -18,6 +19,7 @@ It separates:
 
 - Node.js 18+
 - npm or yarn
+- Java runtime for Allure report generation
 
 ### Installation
 
@@ -25,6 +27,7 @@ It separates:
 git clone https://github.com/rajeshyemul/playwright-ui-automation-framework
 cd playwright-ui-automation-framework
 npm install
+cp .env.example .env
 npx playwright install
 ```
 
@@ -40,6 +43,8 @@ npm test
 npm run report:html
 npm run report:allure
 ```
+
+The Allure CLI is installed as a project dependency, so no separate global Allure installation is required.
 
 ## Design Goals
 
@@ -88,7 +93,7 @@ playwright-ui-automation-framework/
 ├── reports/               # Timestamped execution outputs
 ├── playwright.config.ts   # Playwright runtime configuration
 ├── package.json           # Scripts and dependencies
-└── .env                   # Local runtime configuration
+└── .env.example           # Sample local runtime configuration
 ```
 
 ### Runtime Flow
@@ -101,6 +106,7 @@ playwright-ui-automation-framework/
 ## Practical Boundaries
 
 For the main business suites (`smoke`, `regression`, `e2e`), the intended pattern is:
+
 - tests orchestrate business flow
 - page objects perform UI actions
 - page objects perform validations using helper utilities
@@ -113,6 +119,7 @@ There are still a few framework-verification tests, such as [verifications.test.
 Each run writes artifacts under a timestamped folder in `reports/`.
 
 Typical outputs include:
+
 - Playwright HTML report
 - JUnit report
 - JSON report
@@ -170,9 +177,10 @@ test('should verify home page', async ({ homePage }) => {
 
 ## Environment Configuration
 
-Common runtime controls live in `.env`.
+Common runtime controls live in a local `.env` file based on `.env.example`.
 
 Examples:
+
 - `BROWSER=chromium|firefox|webkit`
 - `ENVIRONMENT=DEV|QA|STAGE|PROD`
 - `HEADLESS=true|false`
@@ -182,7 +190,7 @@ Examples:
 
 If `BASE_URL` is not set, the framework will fall back to an environment-specific URL if configured, and then to the default ParaBank URL.
 
-Sample `.env`:
+Sample `.env.example`:
 
 ```bash
 BROWSER=chromium

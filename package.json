@@ -11,11 +11,23 @@
     "url": "https://github.com/rajeshyemul/playwright-ui-automation-framework/issues"
   },
   "homepage": "https://github.com/rajeshyemul/playwright-ui-automation-framework#readme",
+  "files": [
+    "src",
+    "tests",
+    "README.md",
+    "LICENSE",
+    "playwright.config.ts",
+    "tsconfig.json",
+    "eslint.config.mjs",
+    ".env.example"
+  ],
   "scripts": {
+    "prepare": "husky",
     "test": "npx playwright test",
     "test:smoke": "npx playwright test tests/smoke/",
     "test:regression": "npx playwright test tests/regression/",
     "test:integration": "npx playwright test tests/e2e/",
+    "test:framework": "npx playwright test tests/verifications.test.ts --grep \"Fixture Injection Verification|BasePage Inheritance Verification\"",
     "test:headed": "npx playwright test --headed",
     "test:debug": "npx playwright test --debug",
     "report:html": "npx ts-node src/helper/reporting/GenerateReports.ts html",
@@ -28,6 +40,7 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "type-check": "tsc --noEmit",
+    "validate": "npm run type-check && npm run lint",
     "pretest": "npm run type-check",
     "codegen": "npx playwright codegen"
   },
@@ -54,6 +67,7 @@
     "@types/xml2js": "^0.4.14",
     "@typescript-eslint/eslint-plugin": "8.53.1",
     "@typescript-eslint/parser": "8.53.1",
+    "allure-commandline": "^2.38.0",
     "allure-js-commons": "^3.4.5",
     "allure-playwright": "^3.4.5",
     "crypto-js": "^4.2.0",
@@ -73,5 +87,13 @@
     "winston": "^3.19.0",
     "xlsx": "^0.18.5",
     "xml2js": "^0.6.2"
+  },
+  "lint-staged": {
+    "*.{ts,js,mjs,cjs}": [
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   }
 }

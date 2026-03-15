@@ -19,11 +19,14 @@ test.describe('ParaBank - Regression Tests', () => {
 
     const registrationPage = new RegistrationPage(pageActions);
     const duplicateUser = TestDataProvider.generateUserData({
-      firstName: 'Test',
-      lastName: 'User',
-      address: '123 Test St',
-      city: 'Test City',
-      username: 'testuser',
+      firstName: 'Raj',
+      lastName: 'Malhotra',
+      address: '221 Linking Road',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      zipCode: '400050',
+      phone: '9892012345',
+      username: 'rajtestuser',
     });
 
     await test.step('Verify required field validation', async () => {
@@ -130,10 +133,13 @@ test.describe('ParaBank - Regression Tests', () => {
     const billPayPage = new BillPayPage(pageActions);
 
     const userData = TestDataProvider.generateUserData({
-      firstName: 'Bill',
-      lastName: 'Pay',
-      address: '123 Bill St',
-      city: 'Bill City',
+      firstName: 'Sonal',
+      lastName: 'Kapoor',
+      address: '12 FC Road',
+      city: 'Pune',
+      state: 'Maharashtra',
+      zipCode: '411005',
+      phone: '9867012345',
     });
     const billData = TestDataProvider.generateBillPayData();
 
@@ -172,10 +178,13 @@ test.describe('ParaBank - Regression Tests', () => {
     const accountOverviewPage = new AccountOverviewPage(pageActions);
 
     const userData = TestDataProvider.generateUserData({
-      firstName: 'Account',
-      lastName: 'Details',
-      address: '123 Account St',
-      city: 'Account City',
+      firstName: 'Vikram',
+      lastName: 'Reddy',
+      address: '7 Banjara Hills',
+      city: 'Hyderabad',
+      state: 'Telangana',
+      zipCode: '500034',
+      phone: '9849012345',
     });
 
     await test.step('Register the user and create account activity when possible', async () => {

@@ -39,11 +39,11 @@ export interface BillPayData {
 
 export class TestDataProvider {
   /**
-   * Generate a pseudo-random SSN string for shared test environments.
+   * Generate a pseudo-random identity value for the application's SSN field.
    */
   private static generateUniqueSsn(): string {
-    const part1 = Math.floor(100 + Math.random() * 900);
-    const part2 = Math.floor(10 + Math.random() * 90);
+    const part1 = Math.floor(1000 + Math.random() * 9000);
+    const part2 = Math.floor(1000 + Math.random() * 9000);
     const part3 = Math.floor(1000 + Math.random() * 9000);
 
     return `${part1}-${part2}-${part3}`;
@@ -56,17 +56,17 @@ export class TestDataProvider {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).slice(2, 8);
     const baseData: UserData = {
-      firstName: 'Test',
-      lastName: 'User',
-      address: '123 Test Street',
-      city: 'Test City',
-      state: 'CA',
-      zipCode: '12345',
-      phone: '555-1234',
+      firstName: 'Aarav',
+      lastName: 'Sharma',
+      address: '24 MG Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      zipCode: '560001',
+      phone: '9876543210',
       ssn: this.generateUniqueSsn(),
-      username: `testuser${timestamp}${randomSuffix}`,
+      username: `indianuser${timestamp}${randomSuffix}`,
       password: 'password123',
-      confirmPassword: 'password123'
+      confirmPassword: 'password123',
     };
 
     return { ...baseData, ...overrides };
@@ -77,10 +77,13 @@ export class TestDataProvider {
    */
   static getSmokeTestUser(): UserData {
     return this.generateUserData({
-      firstName: 'Smoke',
-      lastName: 'Test',
-      address: '123 Smoke St',
-      city: 'Smoke City'
+      firstName: 'Priya',
+      lastName: 'Nair',
+      address: '15 Residency Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      zipCode: '560025',
+      phone: '9810012345',
     });
   }
 
@@ -89,10 +92,13 @@ export class TestDataProvider {
    */
   static getRegressionTestUser(): UserData {
     return this.generateUserData({
-      firstName: 'Regression',
-      lastName: 'Test',
-      address: '456 Regression Ave',
-      city: 'Regression City'
+      firstName: 'Rohan',
+      lastName: 'Mehta',
+      address: '42 Law Garden',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      zipCode: '380006',
+      phone: '9825012345',
     });
   }
 
@@ -101,10 +107,13 @@ export class TestDataProvider {
    */
   static getE2eTestUser(): UserData {
     return this.generateUserData({
-      firstName: 'E2E',
-      lastName: 'Test',
-      address: '789 E2E Blvd',
-      city: 'E2E City'
+      firstName: 'Ananya',
+      lastName: 'Iyer',
+      address: '8 T Nagar',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+      zipCode: '600017',
+      phone: '9840012345',
     });
   }
 
@@ -126,15 +135,15 @@ export class TestDataProvider {
    */
   static generateBillPayData(overrides: Partial<BillPayData> = {}): BillPayData {
     const baseData: BillPayData = {
-      payeeName: 'Test Payee',
-      address: '123 Payee St',
-      city: 'Payee City',
-      state: 'CA',
-      zipCode: '12345',
-      phone: '555-9999',
+      payeeName: 'BESCOM',
+      address: 'Krishna Rajendra Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      zipCode: '560001',
+      phone: '8045678901',
       accountNumber: '123456789',
       verifyAccount: '123456789',
-      amount: '50.00'
+      amount: '50.00',
     };
 
     return { ...baseData, ...overrides };
@@ -146,21 +155,21 @@ export class TestDataProvider {
   static getPredefinedUsers() {
     return {
       validUser: this.generateUserData({
-        firstName: 'Valid',
-        lastName: 'User',
-        username: 'validuser',
-        password: 'validpass123'
+        firstName: 'Neha',
+        lastName: 'Verma',
+        username: 'validindianuser',
+        password: 'validpass123',
       }),
 
       invalidUser: {
-        username: 'invaliduser',
-        password: 'wrongpass'
+        username: 'invalidindianuser',
+        password: 'wrongpass',
       },
 
       emptyUser: {
         username: '',
-        password: ''
-      }
+        password: '',
+      },
     };
   }
 
@@ -189,7 +198,7 @@ export class TestDataProvider {
     const user = this.generateUserData();
     return {
       ...user,
-      confirmPassword: 'differentpassword'
+      confirmPassword: 'differentpassword',
     };
   }
 }

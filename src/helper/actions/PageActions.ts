@@ -226,7 +226,6 @@ export class PageActions {
    */
   public async pauseExecution(): Promise<void> {
     Logger.warn('Test execution paused');
-    // eslint-disable-next-line playwright/no-page-pause
     await this.page?.pause();
   }
 

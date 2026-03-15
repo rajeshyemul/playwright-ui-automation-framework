@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import CryptoJS from 'crypto-js';
 import randomString from 'randomstring';
 import format from 'string-format';
