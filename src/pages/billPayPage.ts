@@ -11,6 +11,7 @@ export type BillPayOutcome = 'success' | 'error' | 'unknown';
 export class BillPayPage extends BasePage {
   protected pageUrl = UrlConstants.BILL_PAY_PAGE;
   protected pageTitle = /ParaBank | Bill Pay/;
+  protected pageReadySelector = LOCATORS.PAYEE_NAME;
 
   constructor(pageActions: PageActions) {
     super(pageActions);
@@ -22,7 +23,8 @@ export class BillPayPage extends BasePage {
   public async navigateToBillPay(): Promise<void> {
     await StepRunner.run('Bill Pay - navigation', async () => {
       await this.pageActions.gotoURL(UrlConstants.BILL_PAY_PAGE, 'Bill Pay page');
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
+      await this.waitUtils.waitForPageReady(this.pageReadySelector);
     });
   }
 
@@ -116,7 +118,7 @@ export class BillPayPage extends BasePage {
 
   async getBillPayOutcome(): Promise<BillPayOutcome> {
     return StepRunner.run('Bill Pay - capture payment outcome', async () => {
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
 
       const successVisible = await this.page.locator(LOCATORS.SUCCESS_MESSAGE).isVisible().catch(() => false);
       if (successVisible) {

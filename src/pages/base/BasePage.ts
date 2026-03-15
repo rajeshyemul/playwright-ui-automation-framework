@@ -56,7 +56,6 @@ export abstract class BasePage {
   // ========================================
   // CORE PAGE ACCESS
   // ========================================
-  protected page: Page;
   protected pageActions: PageActions;
 
   // ========================================
@@ -84,13 +83,13 @@ export abstract class BasePage {
   // ========================================
   protected abstract pageUrl: string;
   protected abstract pageTitle: string | RegExp;
+  protected abstract pageReadySelector: string;
 
   /**
    * Constructor - Initialize all helpers
    */
   constructor(pageActions: PageActions) {
     this.pageActions = pageActions;
-    this.page = pageActions.getPage();
 
     // Initialize action helpers
     this.uiActions = new UIActions(pageActions);
@@ -109,6 +108,10 @@ export abstract class BasePage {
     Logger.debug(`${this.constructor.name} initialized`);
   }
 
+  protected get page(): Page {
+    return this.pageActions.getPage();
+  }
+
   // ========================================
   // LIFECYCLE METHODS
   // ========================================
@@ -123,20 +126,9 @@ export abstract class BasePage {
     await StepRunner.run(`${pageName} - navigation`, async () => {
       Logger.info(`Navigating to ${pageName}`);
       await this.pageActions.gotoURL(this.pageUrl, pageName);
-      await this.waitForPageLoad();
+      await this.waitUtils.waitForPageLoad();
+      await this.waitUtils.waitForPageReady(this.pageReadySelector);
     });
-  }
-
-  /**
-   * Wait for page to fully load
-   * 
-   * Delegates to: waitUtils (if you have it there)
-   * Otherwise keeps it simple here
-   */
-  async waitForPageLoad(): Promise<void> {
-    await this.page.waitForLoadState('domcontentloaded');
-    await this.page.waitForLoadState('networkidle');
-    Logger.debug(`${this.constructor.name} loaded`);
   }
 
   /**
@@ -160,7 +152,7 @@ export abstract class BasePage {
   async reload(): Promise<void> {
     Logger.info(`Reloading ${this.constructor.name}`);
     await this.pageActions.reloadPage();
-    await this.waitForPageLoad();
+    await this.waitUtils.waitForPageLoad();
   }
 
   /**
@@ -171,7 +163,7 @@ export abstract class BasePage {
     await StepRunner.run(`${pageName} - logout`, async () => {
       Logger.info(`Logging out from ${pageName}`);
       await this.pageActions.gotoURL(UrlConstants.LOGOUT_PAGE, 'Logout page');
-      await this.waitForPageLoad();
+      await this.waitUtils.waitForPageLoad();
     });
   }
 

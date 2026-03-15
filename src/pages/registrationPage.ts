@@ -11,6 +11,7 @@ export type RegistrationOutcome = 'success' | 'error' | 'unknown';
 export class RegistrationPage extends BasePage {
   protected pageUrl = UrlConstants.REGISTRATION_PAGE;
   protected pageTitle = /ParaBank | Register/;
+  protected pageReadySelector = LOCATORS.REGISTER_BUTTON;
 
   constructor(pageActions: PageActions) {
     super(pageActions);
@@ -22,7 +23,8 @@ export class RegistrationPage extends BasePage {
   public async navigateToRegistration(): Promise<void> {
     await StepRunner.run('Registration Page - navigation', async () => {
       await this.pageActions.gotoURL(UrlConstants.REGISTRATION_PAGE, 'Registration page');
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
+      await this.waitUtils.waitForPageReady(this.pageReadySelector);
     });
   }
 
@@ -98,7 +100,7 @@ export class RegistrationPage extends BasePage {
    */
   async verifySuccessMessage(): Promise<void> {
     await StepRunner.run('Registration - verify success', async () => {
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
 
       const currentUrl = this.page.url();
       const headingText = await this.getRightPanelHeading();
@@ -159,7 +161,7 @@ export class RegistrationPage extends BasePage {
 
   async getRegistrationOutcome(): Promise<RegistrationOutcome> {
     return StepRunner.run('Registration - capture submission outcome', async () => {
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
 
       const currentUrl = this.page.url();
       const headingText = await this.getRightPanelHeading();

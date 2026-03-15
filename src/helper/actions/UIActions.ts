@@ -26,12 +26,14 @@ import { Logger } from '@helper/logger/Logger';
  * OR: Use BasePage methods directly (recommended)
  */
 export class UIActions {
-  private page: Page;
   private pageActions: PageActions;
 
   constructor(pageActions: PageActions) {
     this.pageActions = pageActions;
-    this.page = pageActions.getPage();
+  }
+
+  private get page(): Page {
+    return this.pageActions.getPage();
   }
 
   /**

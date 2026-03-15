@@ -3,7 +3,12 @@ import { test, expect } from '@support/PageFixture';
 /**
  * Verification Tests
  * 
- * RUN WITH: npx playwright test tests/phase1-verification.test.ts --workers=4
+ * PURPOSE:
+ * - Validate fixture wiring and page isolation at framework level
+ * - These tests intentionally exercise lower-level APIs such as `pageActions`
+ *   and raw `expect` where useful
+ * 
+ * RUN WITH: npx playwright test tests/verifications.test.ts --workers=4
  * 
  * EXPECTED: All tests should pass, even in parallel
  */
@@ -76,13 +81,12 @@ test.describe('Phase 1: BasePage Inheritance Verification', () => {
   test('HomePage should inherit BasePage methods', async ({ loginPage }) => {
     // Verify BasePage methods are available
     expect(typeof loginPage.navigate).toBe('function');
-    expect(typeof loginPage.waitForPageLoad).toBe('function');
     expect(typeof loginPage.reload).toBe('function');
     expect(typeof loginPage.getCurrentUrl).toBe('function');
   });
 
   test('RegistrationPage should inherit BasePage methods', async ({ registrationPage }) => {
     expect(typeof registrationPage.navigate).toBe('function');
-    expect(typeof registrationPage.waitForPageLoad).toBe('function');
+    expect(typeof registrationPage.reload).toBe('function');
   });
 });

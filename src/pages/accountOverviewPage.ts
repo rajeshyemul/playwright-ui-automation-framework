@@ -13,6 +13,7 @@ export interface AccountSummary {
 export class AccountOverviewPage extends BasePage {
   protected pageUrl = UrlConstants.ACCOUNTS_PAGE;
   protected pageTitle = /ParaBank | Accounts Overview/;
+  protected pageReadySelector = LOCATORS.ACCOUNT_TABLE;
 
   constructor(pageActions: PageActions) {
     super(pageActions);
@@ -24,7 +25,8 @@ export class AccountOverviewPage extends BasePage {
   public async navigateToAccountOverview(): Promise<void> {
     await StepRunner.run('Account Overview - navigation', async () => {
       await this.pageActions.gotoURL(UrlConstants.ACCOUNTS_PAGE, 'Account Overview page');
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
+      await this.waitUtils.waitForPageReady(this.pageReadySelector);
     });
   }
 
@@ -129,7 +131,7 @@ export class AccountOverviewPage extends BasePage {
 
   async waitForAccountDetailsPageLoaded(): Promise<void> {
     await StepRunner.run('Account Overview - verify account details page loaded', async () => {
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
       const accountDetailsVisible = await this.page.locator(LOCATORS.ACCOUNT_DETAILS).isVisible().catch(() => false);
       const transactionTableVisible = await this.page.locator(LOCATORS.TRANSACTION_TABLE).isVisible().catch(() => false);
 

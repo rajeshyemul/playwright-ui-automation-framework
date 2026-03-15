@@ -11,12 +11,14 @@ import { Logger } from '@helper/logger/Logger';
  * - Uses LocatorFactory with page instance
  */
 export class UIElementActions {
-  private page: Page;
   private pageActions: PageActions;
 
   constructor(pageActions: PageActions) {
     this.pageActions = pageActions;
-    this.page = pageActions.getPage();
+  }
+
+  private get page(): Page {
+    return this.pageActions.getPage();
   }
 
   /**

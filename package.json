@@ -5,6 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "npx playwright test",
+    "test:smoke": "npx playwright test tests/smoke/",
+    "test:regression": "npx playwright test tests/regression/",
+    "test:integration": "npx playwright test tests/e2e/",
     "test:headed": "npx playwright test --headed",
     "test:debug": "npx playwright test --debug",
     "report:html": "npx ts-node src/helper/reporting/GenerateReports.ts html",
