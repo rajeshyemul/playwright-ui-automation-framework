@@ -19,7 +19,7 @@ It is built around:
 
 For a complete explanation of how the framework works internally, read:
 
-- [Framework Architecture Guide](../playwright-typescript-ui-framework/docs/framework-architecture.md)
+- [Framework Architecture Guide](docs/framework-architecture.md)
 
 Use this `README.md` for setup, daily usage, and repository navigation.
 
@@ -296,4 +296,4 @@ If you are trying to understand:
 
 read:
 
-- [Framework Architecture Guide](../playwright-typescript-ui-framework/docs/framework-architecture.md)
+- [Framework Architecture Guide](docs/framework-architecture.md)
