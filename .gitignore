@@ -1,5 +1,7 @@
 
 # Playwright
+.env
+.husky/_/
 node_modules/
 /test-results/
 /playwright-report/

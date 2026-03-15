@@ -57,17 +57,17 @@ test.describe('ParaBank - End-to-End Tests', () => {
     const updateProfilePage = new UpdateProfilePage(pageActions);
 
     const userData = TestDataProvider.generateUserData({
-      firstName: 'Account',
-      lastName: 'Manager',
-      address: '456 Account St',
-      city: 'Account City',
-      state: 'NY',
-      zipCode: '67890',
-      phone: '555-5678',
-      ssn: '987-65-4321',
+      firstName: 'Aditya',
+      lastName: 'Kulkarni',
+      address: '56 JM Road',
+      city: 'Pune',
+      state: 'Maharashtra',
+      zipCode: '411004',
+      phone: '9876501234',
+      ssn: '4123-5678-9012',
       username: `accountmgr${Date.now()}`,
     });
-    const updatedPhoneNumber = '555-9999';
+    const updatedPhoneNumber = '9899001122';
 
     await test.step('Create and review the customer account', async () => {
       await registrationPage.navigateToRegistration();
@@ -106,14 +106,14 @@ test.describe('ParaBank - End-to-End Tests', () => {
     const accountOverviewPage = new AccountOverviewPage(pageActions);
 
     const userData = TestDataProvider.generateUserData({
-      firstName: 'Transfer',
-      lastName: 'Workflow',
-      address: '789 Transfer St',
-      city: 'Transfer City',
-      state: 'TX',
-      zipCode: '54321',
-      phone: '555-1111',
-      ssn: '111-22-3333',
+      firstName: 'Ishita',
+      lastName: 'Patel',
+      address: '31 CG Road',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      zipCode: '380009',
+      phone: '9824401234',
+      ssn: '5234-6789-0123',
       username: `transferwf${Date.now()}`,
     });
 
@@ -160,23 +160,23 @@ test.describe('ParaBank - End-to-End Tests', () => {
     const accountOverviewPage = new AccountOverviewPage(pageActions);
 
     const userData = TestDataProvider.generateUserData({
-      firstName: 'Bill',
-      lastName: 'Payer',
-      address: '123 Bill St',
-      city: 'Bill City',
-      state: 'FL',
-      zipCode: '13579',
-      phone: '555-2222',
-      ssn: '222-33-4444',
+      firstName: 'Meera',
+      lastName: 'Joshi',
+      address: '9 Civil Lines',
+      city: 'Jaipur',
+      state: 'Rajasthan',
+      zipCode: '302006',
+      phone: '9799012345',
+      ssn: '6345-7890-1234',
       username: `billpayer${Date.now()}`,
     });
     const billData = TestDataProvider.generateBillPayData({
-      payeeName: 'Electric Company',
-      address: '456 Power Ave',
-      city: 'Energy City',
-      state: 'CA',
-      zipCode: '98765',
-      phone: '555-3333',
+      payeeName: 'Jaipur Vidyut Vitran Nigam',
+      address: 'Vidyut Bhawan',
+      city: 'Jaipur',
+      state: 'Rajasthan',
+      zipCode: '302005',
+      phone: '1412200000',
       accountNumber: '987654321',
       verifyAccount: '987654321',
       amount: '75.50',
@@ -226,14 +226,14 @@ test.describe('ParaBank - End-to-End Tests', () => {
     const homePage = new HomePage(pageActions);
 
     const userData = TestDataProvider.generateUserData({
-      firstName: 'Complete',
-      lastName: 'Session',
-      address: '999 Session St',
-      city: 'Session City',
-      state: 'WA',
-      zipCode: '99999',
-      phone: '555-0000',
-      ssn: '000-11-2222',
+      firstName: 'Rahul',
+      lastName: 'Chopra',
+      address: '14 Connaught Place',
+      city: 'New Delhi',
+      state: 'Delhi',
+      zipCode: '110001',
+      phone: '9811101234',
+      ssn: '7456-8901-2345',
       username: `completsession${Date.now()}`,
     });
 
@@ -263,12 +263,12 @@ test.describe('ParaBank - End-to-End Tests', () => {
       await billPayPage.navigateToBillPay();
       await billPayPage.payBill(
         TestDataProvider.generateBillPayData({
-          payeeName: 'Internet Provider',
-          address: '123 Web St',
-          city: 'Internet City',
-          state: 'CA',
-          zipCode: '90210',
-          phone: '555-4444',
+          payeeName: 'Airtel Broadband',
+          address: 'Bharti Crescent',
+          city: 'New Delhi',
+          state: 'Delhi',
+          zipCode: '110070',
+          phone: '1144440000',
           accountNumber: '1122334455',
           verifyAccount: '1122334455',
           amount: '89.99',
@@ -283,7 +283,7 @@ test.describe('ParaBank - End-to-End Tests', () => {
       await accountOverviewPage.clickAccountLink(0);
       await accountOverviewPage.logRecentTransactions();
       await updateProfilePage.navigateToUpdateProfile();
-      await updateProfilePage.updateProfile({ phone: '555-7777' });
+      await updateProfilePage.updateProfile({ phone: '9811199999' });
       await updateProfilePage.verifyProfileUpdated();
     });
 
@@ -335,10 +335,13 @@ test.describe('ParaBank - End-to-End Tests', () => {
 
     await test.step('Recover with a valid registration and exercise transfer validation', async () => {
       const userData = TestDataProvider.generateUserData({
-        firstName: 'Error',
-        lastName: 'Test',
-        address: '123 Error St',
-        city: 'Error City',
+        firstName: 'Nitin',
+        lastName: 'Bose',
+        address: '27 Salt Lake',
+        city: 'Kolkata',
+        state: 'West Bengal',
+        zipCode: '700091',
+        phone: '9874012345',
         username: `errortest${Date.now()}`,
       });
 
@@ -359,12 +362,12 @@ test.describe('ParaBank - End-to-End Tests', () => {
       await billPayPage.navigateToBillPay();
       await billPayPage.payBill(
         TestDataProvider.generateBillPayData({
-          payeeName: 'Test Payee',
-          address: '123 Test St',
-          city: 'Test City',
-          state: 'CA',
-          zipCode: '12345',
-          phone: '555-1234',
+          payeeName: 'Bangalore Water Supply',
+          address: 'Cauvery Bhavan',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560009',
+          phone: '8022299999',
           accountNumber: '123456789',
           verifyAccount: '987654321',
           amount: '50.00',

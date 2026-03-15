@@ -10,7 +10,6 @@ const baseFolder = process.env.REPORT_ROOT || path.join(process.cwd(), 'reports'
 if (!process.env.REPORT_ROOT) {
   // If REPORT_ROOT is not configured (e.g. running helper scripts), fallback to a local reports folder.
   // This ensures Logger can still be used outside of the test runner.
-  // eslint-disable-next-line no-console
   console.warn('REPORT_ROOT is not set, falling back to %s', baseFolder);
 }
 

@@ -5,6 +5,7 @@ import { Logger } from '../helper/logger/Logger';
 import { LoginPage } from '@pages/loginPage';
 import { RegistrationPage } from '@pages/registrationPage';
 import { HomePage } from '@pages/homePage';
+import { AccountOverviewPage } from '@pages/accountOverviewPage';
 
 /**
  * Custom Fixtures for Dependency Injection
@@ -36,6 +37,7 @@ type CustomFixtures = {
   loginPage: LoginPage;
   registrationPage: RegistrationPage;
   homePage: HomePage;
+  accountOverviewPage: AccountOverviewPage;
 };
 
 export const test = baseTest.extend<CustomFixtures>({
@@ -135,6 +137,25 @@ export const test = baseTest.extend<CustomFixtures>({
     await use(registrationPage);
 
     Logger.info('RegistrationPage fixture cleanup complete');
+  },
+
+  /**
+   * accountOverviewPage Fixture
+   *
+   * DEPENDS ON: pageActions
+   *
+   * BENEFITS:
+   * - AccountOverviewPage auto-initialized
+   * - Reusable for smoke, regression, and e2e flows
+   */
+  accountOverviewPage: async ({ pageActions }, use) => {
+    Logger.info('Creating AccountOverviewPage instance');
+
+    const accountOverviewPage = new AccountOverviewPage(pageActions);
+
+    await use(accountOverviewPage);
+
+    Logger.info('AccountOverviewPage fixture cleanup complete');
   },
 });
 

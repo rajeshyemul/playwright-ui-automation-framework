@@ -1,7 +1,6 @@
-import { Locator, Page, test } from '@playwright/test';
+import { Page, test } from '@playwright/test';
 import { PageActions } from './PageActions';
 import { Logger } from '@helper/logger/Logger';
-import { LocatorFactory } from './LocatorFactory';
 
 /**
  *  UIActions - Common UI interactions with Allure step integration
@@ -37,11 +36,7 @@ import { LocatorFactory } from './LocatorFactory';
  */
  
 export class UIActions {
-  private pageActions: PageActions;
-
-  constructor(pageActions: PageActions) {
-    this.pageActions = pageActions;
-  }
+  constructor(private readonly pageActions: PageActions) {}
 
   private get page(): Page {
     return this.pageActions.getPage();

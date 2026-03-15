@@ -1,6 +1,3 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
 export class SetupConstants {
   /**
    * Timeout constant for small actions/assertions, set to 5000 milliseconds (5 seconds).
@@ -57,5 +54,5 @@ export class SetupConstants {
   static readonly SECOND = 'second';
   static readonly MINUTE = 'minute';
   static readonly HOUR = 'hour';
-  static PASSED_STATUS: any;
+  static readonly PASSED_STATUS = 'passed';
 }

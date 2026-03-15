@@ -1,12 +1,36 @@
 // src/helper/reporting/GenerateReports.ts
 
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { Logger } from '../logger/Logger';
 
 export class GenerateReports {
   private static readonly REPORT_ROOT = path.resolve(process.cwd(), 'reports');
+
+  private static getCommandEnv(): NodeJS.ProcessEnv {
+    const env = { ...process.env };
+    const configuredJavaHome = env.JAVA_HOME;
+
+    if (configuredJavaHome && fs.existsSync(configuredJavaHome)) {
+      return env;
+    }
+
+    try {
+      const resolvedJavaHome = execSync('/usr/libexec/java_home', {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+
+      if (resolvedJavaHome) {
+        env.JAVA_HOME = resolvedJavaHome;
+      }
+    } catch {
+      delete env.JAVA_HOME;
+    }
+
+    return env;
+  }
 
   /**
    * Finds the most recent timestamped run folder under /reports.
@@ -84,13 +108,13 @@ Please run tests first: npm test
       throw new Error(`Allure results not found at ${resultsPath}`);
     }
 
-    let command = `allure generate "${resultsPath}" --name "${title}" -o "${reportPath}" --clean`;
+    let command = `npx allure generate "${resultsPath}" --name "${title}" -o "${reportPath}" --clean`;
 
     if (open) {
-      command += ` && allure open "${reportPath}"`;
+      command += ` && npx allure open "${reportPath}"`;
     }
 
-    exec(command, (error, stdout, stderr) => {
+    exec(command, { env: this.getCommandEnv() }, (error, stdout, stderr) => {
       if (error) {
         Logger.error(`Allure generation failed: ${error.message}`);
         return;

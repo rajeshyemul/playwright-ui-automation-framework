@@ -155,7 +155,7 @@ export class WaitUtils {
       const urlRegex = new RegExp(urlPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
       await this.page.waitForURL(urlRegex, { timeout });
       Logger.info(`URL contains: ${urlPart}`);
-    } catch (error) {
+    } catch {
       throw new Error(`Timeout: URL did not contain "${urlPart}" within ${timeout}ms`);
     }
   }
