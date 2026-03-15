@@ -38,12 +38,23 @@ export interface BillPayData {
 }
 
 export class TestDataProvider {
+  /**
+   * Generate a pseudo-random SSN string for shared test environments.
+   */
+  private static generateUniqueSsn(): string {
+    const part1 = Math.floor(100 + Math.random() * 900);
+    const part2 = Math.floor(10 + Math.random() * 90);
+    const part3 = Math.floor(1000 + Math.random() * 9000);
+
+    return `${part1}-${part2}-${part3}`;
+  }
 
   /**
    * Generate unique user data for registration
    */
   static generateUserData(overrides: Partial<UserData> = {}): UserData {
     const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).slice(2, 8);
     const baseData: UserData = {
       firstName: 'Test',
       lastName: 'User',
@@ -52,8 +63,8 @@ export class TestDataProvider {
       state: 'CA',
       zipCode: '12345',
       phone: '555-1234',
-      ssn: '123-45-6789',
-      username: `testuser${timestamp}`,
+      ssn: this.generateUniqueSsn(),
+      username: `testuser${timestamp}${randomSuffix}`,
       password: 'password123',
       confirmPassword: 'password123'
     };
