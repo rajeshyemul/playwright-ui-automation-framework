@@ -17,6 +17,7 @@ export interface UpdateProfileData {
 export class UpdateProfilePage extends BasePage {
   protected pageUrl = UrlConstants.UPDATE_CONTACT_INFO_PAGE;
   protected pageTitle = /ParaBank | Update Profile/;
+  protected pageReadySelector = LOCATORS.UPDATE_BUTTON;
 
   constructor(pageActions: PageActions) {
     super(pageActions);
@@ -25,7 +26,8 @@ export class UpdateProfilePage extends BasePage {
   public async navigateToUpdateProfile(): Promise<void> {
     await StepRunner.run('Update Profile - navigation', async () => {
       await this.pageActions.gotoURL(UrlConstants.UPDATE_CONTACT_INFO_PAGE, 'Update Profile page');
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
+      await this.waitUtils.waitForPageReady(this.pageReadySelector);
     });
   }
 

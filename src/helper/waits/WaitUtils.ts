@@ -13,12 +13,14 @@ import { Logger } from '@helper/logger/Logger';
  * - Easy to extend with custom waits
  */
 export class WaitUtils {
-  private page: Page;
   private pageActions: PageActions;
 
   constructor(pageActions: PageActions) {
     this.pageActions = pageActions;
-    this.page = pageActions.getPage();
+  }
+
+  private get page(): Page {
+    return this.pageActions.getPage();
   }
 
   /**
@@ -62,6 +64,22 @@ export class WaitUtils {
   ): Promise<void> {
     Logger.info(`Waiting for load state: ${state}`);
     await this.page.waitForLoadState(state, { timeout });
+  }
+
+  /**
+   * Wait for a page to finish its initial HTML load.
+   */
+  async waitForPageLoad(timeout: number = 30000): Promise<void> {
+    Logger.info('Waiting for page load: domcontentloaded');
+    await this.page.waitForLoadState('domcontentloaded', { timeout });
+  }
+
+  /**
+   * Wait for a page-specific ready selector to become visible.
+   */
+  async waitForPageReady(selector: string, timeout: number = 30000): Promise<void> {
+    Logger.info(`Waiting for page ready selector: ${selector}`);
+    await this.page.locator(selector).waitFor({ state: 'visible', timeout });
   }
 
   /**

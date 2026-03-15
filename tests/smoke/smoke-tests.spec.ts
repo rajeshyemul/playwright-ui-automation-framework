@@ -12,28 +12,29 @@ import { TestDataProvider } from '@support/testdata/TestDataProvider';
  *
  * RUN WITH: npx playwright test tests/smoke/ --workers=3
  *
- * These tests verify core functionality works after deployment
+ * These tests verify the minimum viable banking flows.
+ * A smoke failure should mean the application is not healthy enough for deeper suites.
  */
 
 test.describe('ParaBank - Smoke Tests', () => {
-
   test('TC-SMK-001: Application Accessibility', async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'Smoke Tests',
       feature: 'Application Accessibility',
       story: 'Verify application loads correctly',
-      severity: 'critical'
+      severity: 'critical',
     });
 
     const homePage = new HomePage(pageActions);
 
-    await test.step('Navigate to ParaBank application', async () => {
+    await test.step('Open the application landing page', async () => {
       await homePage.navigateToHome();
     });
 
-    await test.step('Verify page loads successfully', async () => {
+    await test.step('Verify the home page is ready for interaction', async () => {
       await homePage.verifyPageLoaded();
       await homePage.verifyLogoVisible();
+      await homePage.verifyLoginFormVisible();
     });
   });
 
@@ -42,22 +43,15 @@ test.describe('ParaBank - Smoke Tests', () => {
       epic: 'Smoke Tests',
       feature: 'User Registration',
       story: 'Complete user registration process',
-      severity: 'critical'
+      severity: 'critical',
     });
 
     const registrationPage = new RegistrationPage(pageActions);
     const userData = TestDataProvider.getSmokeTestUser();
 
-    await test.step('Navigate to registration page', async () => {
+    await test.step('Register a new smoke user', async () => {
       await registrationPage.navigateToRegistration();
-    });
-
-    await test.step('Complete registration form', async () => {
-      await registrationPage.register(userData);
-    });
-
-    await test.step('Verify registration success', async () => {
-      await registrationPage.verifySuccessMessage();
+      await registrationPage.registerAndVerifySuccess(userData);
     });
   });
 
@@ -66,32 +60,33 @@ test.describe('ParaBank - Smoke Tests', () => {
       epic: 'Smoke Tests',
       feature: 'User Login',
       story: 'Verify user can login successfully',
-      severity: 'critical'
+      severity: 'critical',
     });
 
+    const registrationPage = new RegistrationPage(pageActions);
     const loginPage = new LoginPage(pageActions);
     const accountOverviewPage = new AccountOverviewPage(pageActions);
-
-    // Use a test user that should exist (assuming registration worked in previous test)
-    // For smoke tests, we'll use a known test user pattern
-    const testUsername = 'testuser_smoke_' + Date.now();
-    const testPassword = 'password123';
-
-    await test.step('Navigate to login page', async () => {
-      await loginPage.navigateToLogin();
+    const userData = TestDataProvider.generateUserData({
+      firstName: 'Smoke',
+      lastName: 'Login',
+      address: '123 Smoke Login St',
+      city: 'Smoke City',
     });
 
-    await test.step('Attempt login (may fail if user not registered)', async () => {
-      try {
-        await loginPage.login(testUsername, testPassword);
-        await test.step('Verify successful login', async () => {
-          await accountOverviewPage.verifyAccountOverviewPageLoaded();
-        });
-      } catch (error) {
-        Logger.info(`Login failed as expected - user may not exist: ${error instanceof Error ? error.message : String(error)}`);
-        // For smoke tests, login failure is acceptable if registration didn't work
-        // In a real scenario, we'd register first or use known test users
-      }
+    await test.step('Provision a valid smoke user', async () => {
+      await registrationPage.navigateToRegistration();
+      await registrationPage.registerAndVerifySuccess(userData);
+      await registrationPage.logout();
+    });
+
+    await test.step('Log in with the registered user', async () => {
+      await loginPage.navigateToLogin();
+      await loginPage.loginAndVerify(userData.username, userData.password);
+    });
+
+    await test.step('Verify the user lands on account overview', async () => {
+      await accountOverviewPage.verifyAccountOverviewPageLoaded();
+      await accountOverviewPage.verifyAccountsAvailable();
     });
   });
 
@@ -100,34 +95,28 @@ test.describe('ParaBank - Smoke Tests', () => {
       epic: 'Smoke Tests',
       feature: 'Account Overview',
       story: 'Verify account information displays correctly',
-      severity: 'critical'
+      severity: 'critical',
     });
 
+    const registrationPage = new RegistrationPage(pageActions);
     const accountOverviewPage = new AccountOverviewPage(pageActions);
-
-    await test.step('Navigate to account overview page', async () => {
-      await accountOverviewPage.navigateToAccountOverview();
+    const userData = TestDataProvider.generateUserData({
+      firstName: 'Smoke',
+      lastName: 'Overview',
+      address: '123 Smoke Overview St',
+      city: 'Smoke City',
     });
 
-    await test.step('Verify account overview page loads', async () => {
-      // This will fail if not logged in, but that's expected for smoke tests
-      try {
-        await accountOverviewPage.verifyAccountOverviewPageLoaded();
-        await test.step('Verify account information', async () => {
-          const accountCount = await accountOverviewPage.getAccountCount();
-          Logger.info(`User has ${accountCount} account(s)`);
+    await test.step('Create an authenticated smoke user', async () => {
+      await registrationPage.navigateToRegistration();
+      await registrationPage.registerAndVerifySuccess(userData);
+    });
 
-          if (accountCount > 0) {
-            const accountNumber = await accountOverviewPage.getAccountNumber(0);
-            const balance = await accountOverviewPage.getAccountBalance(0);
-
-            Logger.info(`Account ${accountNumber}: $${balance}`);
-          }
-        });
-      } catch (error) {
-        Logger.info(`Account overview not accessible - user not logged in: ${error instanceof Error ? error.message : String(error)}`);
-        // For smoke tests, this is acceptable if login didn't work
-      }
+    await test.step('Verify account overview data is available', async () => {
+      await accountOverviewPage.verifyAccountOverviewPageLoaded();
+      await accountOverviewPage.verifyAccountsAvailable();
+      const summaries = await accountOverviewPage.logAccountSummaries();
+      Logger.info(`Smoke account overview returned ${summaries.length} account summary rows`);
     });
   });
 
@@ -136,26 +125,28 @@ test.describe('ParaBank - Smoke Tests', () => {
       epic: 'Smoke Tests',
       feature: 'Logout Functionality',
       story: 'Verify user can logout successfully',
-      severity: 'critical'
+      severity: 'critical',
     });
 
     const registrationPage = new RegistrationPage(pageActions);
     const homePage = new HomePage(pageActions);
+    const userData = TestDataProvider.generateUserData({
+      firstName: 'Smoke',
+      lastName: 'Logout',
+      address: '123 Smoke Logout St',
+      city: 'Smoke City',
+    });
 
-    // Register and login first
-    const userData = TestDataProvider.getSmokeTestUser();
-
-    await test.step('Register and login user', async () => {
+    await test.step('Register and land in an authenticated session', async () => {
       await registrationPage.navigateToRegistration();
-      await registrationPage.register(userData);
-      await registrationPage.verifySuccessMessage();
+      await registrationPage.registerAndVerifySuccess(userData);
     });
 
-    await test.step('Logout user', async () => {
-      await pageActions.getPage().goto('https://parabank.parasoft.com/parabank/logout.htm');
+    await test.step('Log out of the application', async () => {
+      await registrationPage.logout();
     });
 
-    await test.step('Verify logout successful', async () => {
+    await test.step('Verify the user is returned to the home page', async () => {
       await homePage.verifyPageLoaded();
       await homePage.verifyLoginFormVisible();
     });

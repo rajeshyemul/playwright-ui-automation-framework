@@ -10,6 +10,21 @@ dotenv.config();
  * such as environment, base URLs, browser type, and headless mode.
  */
 export class ConfigManager {
+  private static normalizeBaseUrl(url: string): string {
+    return url.replace(/\/+$/, '');
+  }
+
+  private static getEnvironmentBaseUrl(environment: Environments): string | undefined {
+    const environmentBaseUrlMap: Record<Environments, string | undefined> = {
+      [Environments.DEV]: process.env.DEV_BASE_URL,
+      [Environments.QA]: process.env.QA_BASE_URL,
+      [Environments.STAGE]: process.env.STAGE_BASE_URL,
+      [Environments.PROD]: process.env.PROD_BASE_URL,
+    };
+
+    return environmentBaseUrlMap[environment];
+  }
+
   public static getEnvironment(): Environments {
     const env = process.env.ENVIRONMENT?.toUpperCase() as Environments;
     if (!env || !(env in Environments)) {
@@ -24,16 +39,17 @@ export class ConfigManager {
    */
   public static setBaseUIUrl(): string {
     const env = this.getEnvironment();
-    switch (env) {
-      case Environments.QA:
-      case Environments.DEV:
-        return UrlConstants.BASE_URL;
-      case Environments.STAGE:
-      case Environments.PROD:
-        return UrlConstants.BASE_URL;
-      default:
-        throw new Error('Unhandled environment in getBaseUIUrl');
+    const explicitBaseUrl = process.env.BASE_URL;
+    if (explicitBaseUrl) {
+      return this.normalizeBaseUrl(explicitBaseUrl);
     }
+
+    const environmentBaseUrl = this.getEnvironmentBaseUrl(env);
+    if (environmentBaseUrl) {
+      return this.normalizeBaseUrl(environmentBaseUrl);
+    }
+
+    return UrlConstants.DEFAULT_BASE_URL;
   }
 
   /**

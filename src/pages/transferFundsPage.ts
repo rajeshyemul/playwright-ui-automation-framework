@@ -11,6 +11,7 @@ export type TransferOutcome = 'success' | 'error' | 'unknown';
 export class TransferFundsPage extends BasePage {
   protected pageUrl = UrlConstants.TRANSFER_FUNDS_PAGE;
   protected pageTitle = /ParaBank | Transfer Funds/;
+  protected pageReadySelector = LOCATORS.AMOUNT_FIELD;
 
   constructor(pageActions: PageActions) {
     super(pageActions);
@@ -22,7 +23,8 @@ export class TransferFundsPage extends BasePage {
   public async navigateToTransferFunds(): Promise<void> {
     await StepRunner.run('Transfer Funds - navigation', async () => {
       await this.pageActions.gotoURL(UrlConstants.TRANSFER_FUNDS_PAGE, 'Transfer Funds page');
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
+      await this.waitUtils.waitForPageReady(this.pageReadySelector);
     });
   }
 
@@ -130,7 +132,7 @@ export class TransferFundsPage extends BasePage {
 
   async getTransferOutcome(): Promise<TransferOutcome> {
     return StepRunner.run('Transfer Funds - capture transfer outcome', async () => {
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
 
       const successVisible = await this.page.locator(LOCATORS.SUCCESS_MESSAGE).isVisible().catch(() => false);
       if (successVisible) {

@@ -7,6 +7,7 @@ import { Logger } from '@helper/logger/Logger';
 export class LoginPage extends BasePage {
   protected pageUrl = UrlConstants.LOGIN_PAGE;
   protected pageTitle = /ParaBank | Customer Login/;
+  protected pageReadySelector = '[name="username"]';
 
   constructor(pageActions: PageActions) {
     super(pageActions);
@@ -18,7 +19,8 @@ export class LoginPage extends BasePage {
   public async navigateToLogin(): Promise<void> {
     await StepRunner.run('Login Page - navigation', async () => {
       await this.pageActions.gotoURL(UrlConstants.LOGIN_PAGE, 'Login page');
-      await this.waitUtils.waitForLoadState('networkidle');
+      await this.waitUtils.waitForPageLoad();
+      await this.waitUtils.waitForPageReady(this.pageReadySelector);
     });
   }
 

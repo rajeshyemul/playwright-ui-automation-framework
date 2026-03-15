@@ -1,8 +1,8 @@
-import { test as base, Page, BrowserContext, TestInfo } from '@playwright/test';
+import { test as base, TestInfo } from '@playwright/test';
 import { Logger } from '@helper/logger/Logger';
 import { AllureReporter } from '@helper/reporting/AllureReporter';
+import { SetupConstants } from '@support/constants/SetupConstants';
 import * as fs from 'fs';
-import * as path from 'path';
 
 /**
  * 
@@ -38,7 +38,7 @@ base.beforeEach(async ({ page, context }, testInfo: TestInfo) => {
   Logger.info('-'.repeat(80));
   
   // Set default timeout
-  testInfo.setTimeout(60000);
+  testInfo.setTimeout(SetupConstants.TEST_TIMEOUT);
   
   // Log browser info
   const browserName = context.browser()?.browserType().name();

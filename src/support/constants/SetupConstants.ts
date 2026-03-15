@@ -49,7 +49,7 @@ export class SetupConstants {
   static readonly RETAIN_ON_FAILURE = 'retain-on-failure';
   static readonly CHROMIUM = 'chromium';
   static readonly LOCAL = 'local';
-  static readonly LOAD_STATE_NETWORKIDLE = 'load';
+  static readonly LOAD_STATE_NETWORKIDLE = 'networkidle';
   static readonly HTML_REPORT_TITLE = 'Test Automation Report';
   static readonly FRAMEWORK_TITLE = 'TEST AUTOMATION USING PLAYWRIGHT';
   static readonly LOGGER_LINE_SEPARATOR =

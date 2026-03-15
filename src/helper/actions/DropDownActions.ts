@@ -10,12 +10,14 @@ import { Logger } from '@helper/logger/Logger';
  * - Now instance-based, receives PageActions in constructor
  */
 export class DropDownActions {
-  private page: Page;
   private pageActions: PageActions;
 
   constructor(pageActions: PageActions) {
     this.pageActions = pageActions;
-    this.page = pageActions.getPage();
+  }
+
+  private get page(): Page {
+    return this.pageActions.getPage();
   }
 
   /**

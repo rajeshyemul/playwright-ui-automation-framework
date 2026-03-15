@@ -1,3 +1,4 @@
+import '@config/PageSetup';
 import { test as baseTest } from '@playwright/test';
 import { PageActions } from '../helper/actions/PageActions';
 import { Logger } from '../helper/logger/Logger';
@@ -7,6 +8,10 @@ import { HomePage } from '@pages/homePage';
 
 /**
  * Custom Fixtures for Dependency Injection
+ *
+ * NOTE:
+ * - Importing `@config/PageSetup` above registers the global lifecycle hooks
+ *   used for logging and failure artifact collection.
  *
  * WHY FIXTURES?
  * - Automatic setup/teardown per test
