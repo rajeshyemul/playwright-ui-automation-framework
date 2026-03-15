@@ -241,4 +241,88 @@ export class ExpectUtils {
       }
     });
   }
+
+  /**
+   * Asserts that the element contains the provided substring.
+   */
+  public async expectElementToContainText(
+    input: string | Locator,
+    description: string,
+    text: string | RegExp,
+    errorMessage: string,
+    options?: ExpectOptions
+  ): Promise<void> {
+    return StepRunner.run(`Verify ${description} contains text:`, async () => {
+      const { locator, assert } = this.getLocatorAndAssert(input, options);
+      const matcherOptions = this.getMatcherOptions(options);
+      try {
+        await assert(locator).toContainText(text, matcherOptions);
+      } catch (error) {
+        Logger.error(`expectElementToContainText error: ${error}`);
+        throw new Error(errorMessage);
+      }
+    });
+  } /**
+   * Asserts that the element is enabled.
+   */
+  public async expectElementToBeEnabled(
+    input: string | Locator,
+    description: string,
+    errorMessage: string,
+    options?: ExpectOptions
+  ): Promise<void> {
+    return StepRunner.run(`Verify ${description} is enabled:`, async () => {
+      const { locator, assert } = this.getLocatorAndAssert(input, options);
+      const matcherOptions = this.getMatcherOptions(options);
+      try {
+        await assert(locator).toBeEnabled(matcherOptions);
+      } catch (error) {
+        Logger.error(`expectElementToBeEnabled error: ${error}`);
+        throw new Error(errorMessage);
+      }
+    });
+  }
+
+  /**
+   * Asserts that the element is disabled.
+   */
+  public async expectElementToBeDisabled(
+    input: string | Locator,
+    description: string,
+    errorMessage: string,
+    options?: ExpectOptions
+  ): Promise<void> {
+    return StepRunner.run(`Verify ${description} is disabled:`, async () => {
+      const { locator, assert } = this.getLocatorAndAssert(input, options);
+      const matcherOptions = this.getMatcherOptions(options);
+      try {
+        await assert(locator).toBeDisabled(matcherOptions);
+      } catch (error) {
+        Logger.error(`expectElementToBeDisabled error: ${error}`);
+        throw new Error(errorMessage);
+      }
+    });
+  }
+
+  /**
+   * Asserts that the locator resolves to exactly n matching elements.
+   */
+  public async expectElementToHaveCount(
+    input: string | Locator,
+    description: string,
+    count: number,
+    errorMessage: string,
+    options?: ExpectOptions
+  ): Promise<void> {
+    return StepRunner.run(`Verify ${description} count:`, async () => {
+      const { locator, assert } = this.getLocatorAndAssert(input, options);
+      const matcherOptions = this.getMatcherOptions(options);
+      try {
+        await assert(locator).toHaveCount(count, matcherOptions);
+      } catch (error) {
+        Logger.error(`expectElementToHaveCount error: ${error}`);
+        throw new Error(errorMessage);
+      }
+    });
+  }
 }

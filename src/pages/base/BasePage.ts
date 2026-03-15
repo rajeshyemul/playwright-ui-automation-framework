@@ -108,6 +108,9 @@ export abstract class BasePage {
     Logger.debug(`${this.constructor.name} initialized`);
   }
 
+  /**
+   * Get the current active Playwright page from PageActions.
+   */
   protected get page(): Page {
     return this.pageActions.getPage();
   }

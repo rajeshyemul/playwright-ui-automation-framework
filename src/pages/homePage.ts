@@ -9,6 +9,9 @@ export class HomePage extends BasePage {
   protected pageTitle = HomePageConstants.HomePageTitleDescription;
   protected pageReadySelector = HomePageLocators.USERNAME_FIELD;
 
+  /**
+   * Navigate to the application home page.
+   */
   public async navigateToHome(): Promise<void> {
     await StepRunner.run('Home Page - initial load validation', async () => {
       await this.pageActions
@@ -18,6 +21,9 @@ export class HomePage extends BasePage {
     });
   }
 
+  /**
+   * Verify the ParaBank logo is visible on the home page.
+   */
   public async verifyLogoVisible(): Promise<void> {
     await StepRunner.run('Home Page - verify logo visibility', async () => {
       await this.expectUtils.expectElementToBeVisible(
@@ -46,6 +52,9 @@ export class HomePage extends BasePage {
     });
   }
 
+  /**
+   * Verify the home page title matches the expected pattern.
+   */
   public async verifyTitle(expected: RegExp): Promise<void> {
     await StepRunner.run('Home Page - verify page title', async () => {
       await this.expectUtils.expectPageToHaveTitle(

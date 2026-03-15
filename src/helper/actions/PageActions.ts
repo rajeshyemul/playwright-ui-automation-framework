@@ -25,6 +25,9 @@ export class PageActions {
     Logger.debug(`PageActions instance created`);
   }
 
+  /**
+   * Get the current active Playwright page.
+   */
   public getPage(): Page {
     if (this.page.isClosed()) {
       throw new Error('Attempted to access a closed page');
@@ -32,6 +35,9 @@ export class PageActions {
     return this.page;
   }
 
+  /**
+   * Replace the current active page reference.
+   */
   public setPage(pageInstance: Page): void {
     if (pageInstance.isClosed()) {
       throw new Error('Cannot set a closed page');
@@ -40,14 +46,23 @@ export class PageActions {
     this.page = pageInstance;
   }
 
+  /**
+   * Get the current browser context.
+   */
   public getContext(): BrowserContext {
     return this.context;
   }
 
+  /**
+   * Replace the current browser context reference.
+   */
   public setContext(contextInstance: BrowserContext): void {
     this.context = contextInstance;
   }
 
+  /**
+   * Navigate the active page to the supplied URL.
+   */
   public async gotoURL(url: string, description: string): Promise<void> {
     try {
       Logger.info(`Navigating to ${description}: ${url}`);
@@ -68,6 +83,9 @@ export class PageActions {
     }
   }
 
+  /**
+   * Resize the active page viewport.
+   */
   public async resizePage(width: number, height: number): Promise<void> {
     Logger.info(`Resizing page to ${width}x${height}`);
     await this.getPage().setViewportSize({ width, height });
@@ -77,11 +95,17 @@ export class PageActions {
     return this.context.pages().length;
   }
 
+  /**
+   * Open a new page in the current browser context.
+   */
   public async openNewPage(): Promise<Page> {
     Logger.info('Opening new page');
     return await this.context.newPage();
   }
 
+  /**
+   * Switch to an already opened page by its one-based index.
+   */
   public async switchPage(winNum: number): Promise<void> {
     const timeout = 10000;
     const startTime = Date.now();
@@ -105,6 +129,9 @@ export class PageActions {
     Logger.info(`Switched to page ${winNum}: ${pageInstance.url()}`);
   }
 
+  /**
+   * Click an element that opens a new page and switch focus to it.
+   */
   public async switchPageAction(selector: string): Promise<void> {
     this.storedPage = this.page;
     Logger.info(`Clicking element to open new page: ${selector}`);
@@ -120,6 +147,9 @@ export class PageActions {
     Logger.info(`Switched to new page: ${newPage.url()}`);
   }
 
+  /**
+   * Switch back to the stored source page or the first context page.
+   */
   public async switchToDefaultPage(): Promise<void> {
     Logger.info('Switching to default page');
 
@@ -137,6 +167,9 @@ export class PageActions {
     }
   }
 
+  /**
+   * Treat the target iframe as the active page context.
+   */
   public async switchToFrameAsPage(selector: string): Promise<void> {
     Logger.info(`Switching to iframe: ${selector}`);
 
@@ -155,6 +188,9 @@ export class PageActions {
     this.setPage(iframePage);
   }
 
+  /**
+   * Close the current page or a specific page by one-based index.
+   */
   public async closePage(winNum?: number): Promise<void> {
     if (!winNum) {
       Logger.info('Closing current page');
@@ -173,6 +209,9 @@ export class PageActions {
     }
   }
 
+  /**
+   * Clear cookies and browser storage for the active session.
+   */
   public async clearSession(): Promise<void> {
     Logger.info('Clearing browser session');
     await this.context.clearCookies();
@@ -182,16 +221,25 @@ export class PageActions {
     });
   }
 
+  /**
+   * Pause the active page for interactive debugging.
+   */
   public async pauseExecution(): Promise<void> {
     Logger.warn('Test execution paused');
     // eslint-disable-next-line playwright/no-page-pause
     await this.page?.pause();
   }
 
+  /**
+   * Get the current URL of the active page.
+   */
   public async getCurrentUrl(): Promise<string> {
     return this.getPage().url();
   }
 
+  /**
+   * Wait for the active page URL to match the supplied pattern.
+   */
   public async waitForNavigation(
     urlPattern: string | RegExp,
     timeout: number = 30000
@@ -200,16 +248,25 @@ export class PageActions {
     await this.page.waitForURL(urlPattern, { timeout });
   }
 
+  /**
+   * Reload the active page.
+   */
   public async reloadPage(): Promise<void> {
     Logger.info('Reloading page');
     await this.page.reload({ waitUntil: 'domcontentloaded' });
   }
 
+  /**
+   * Navigate backward in the browser history.
+   */
   public async goBack(): Promise<void> {
     Logger.info('Navigating back');
     await this.page.goBack({ waitUntil: 'domcontentloaded' });
   }
 
+  /**
+   * Navigate forward in the browser history.
+   */
   public async goForward(): Promise<void> {
     Logger.info('Navigating forward');
     await this.page.goForward({ waitUntil: 'domcontentloaded' });

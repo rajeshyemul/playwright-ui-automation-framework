@@ -17,6 +17,9 @@ export class UIElementActions {
     this.pageActions = pageActions;
   }
 
+  /**
+   * Get the current active Playwright page from PageActions.
+   */
   private get page(): Page {
     return this.pageActions.getPage();
   }
@@ -158,5 +161,46 @@ export class UIElementActions {
     const locator = LocatorFactory.getLocator(this.page, input);
     Logger.info('Focusing element');
     await locator.focus();
+  }
+
+  /**
+   * Force click an element when normal clickability checks are too strict.
+   */
+  public async forceClick(input: string | Locator): Promise<void> {
+    const locator = LocatorFactory.getLocator(this.page, input);
+    Logger.info('Force clicking element');
+    await locator.click({ force: true });
+  }
+
+  /**
+   * Click at a specific position inside the target element.
+   */
+  public async clickAtPosition(
+    input: string | Locator,
+    position: { x: number; y: number }
+  ): Promise<void> {
+    const locator = LocatorFactory.getLocator(this.page, input);
+    Logger.info(`Clicking at position (${position.x}, ${position.y})`);
+    await locator.click({ position });
+  }
+
+  /**
+   * Get the trimmed text content of the target element.
+   */
+  public async getText(input: string | Locator): Promise<string> {
+    const locator = LocatorFactory.getLocator(this.page, input);
+    const text = await locator.textContent();
+    Logger.info(`Element text: ${text}`);
+    return text?.trim() || '';
+  }
+
+  /**
+   * Get the trimmed text content of all matching elements.
+   */
+  public async getAllTexts(input: string | Locator): Promise<string[]> {
+    const locator = LocatorFactory.getLocator(this.page, input);
+    const texts = await locator.allTextContents();
+    Logger.info(`Found ${texts.length} text contents`);
+    return texts.map((t) => t.trim());
   }
 }

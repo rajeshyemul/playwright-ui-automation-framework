@@ -23,6 +23,9 @@ export class UpdateProfilePage extends BasePage {
     super(pageActions);
   }
 
+  /**
+   * Navigate to the update profile page.
+   */
   public async navigateToUpdateProfile(): Promise<void> {
     await StepRunner.run('Update Profile - navigation', async () => {
       await this.pageActions.gotoURL(UrlConstants.UPDATE_CONTACT_INFO_PAGE, 'Update Profile page');
@@ -31,6 +34,9 @@ export class UpdateProfilePage extends BasePage {
     });
   }
 
+  /**
+   * Update the contact details provided in the payload.
+   */
   public async updateProfile(details: UpdateProfileData): Promise<void> {
     await StepRunner.run('Update Profile - update contact details', async () => {
       if (details.firstName !== undefined) {
@@ -65,6 +71,9 @@ export class UpdateProfilePage extends BasePage {
     });
   }
 
+  /**
+   * Verify the profile update success message is displayed.
+   */
   public async verifyProfileUpdated(): Promise<void> {
     await StepRunner.run('Update Profile - verify profile update success', async () => {
       await this.waitUtils.waitForVisible(LOCATORS.SUCCESS_MESSAGE);
@@ -77,12 +86,18 @@ export class UpdateProfilePage extends BasePage {
     });
   }
 
+  /**
+   * Get the current phone number value from the update profile form.
+   */
   public async getPhoneNumber(): Promise<string> {
     return StepRunner.run('Update Profile - get phone number', async () => {
       return this.editBoxActions.getValue(LOCATORS.PHONE);
     });
   }
 
+  /**
+   * Verify the stored phone number matches the expected value.
+   */
   public async verifyPhoneNumber(expectedPhoneNumber: string): Promise<void> {
     await StepRunner.run('Update Profile - verify phone number value', async () => {
       const actualPhoneNumber = await this.getPhoneNumber();

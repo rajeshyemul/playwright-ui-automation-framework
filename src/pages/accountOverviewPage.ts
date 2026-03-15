@@ -95,6 +95,9 @@ export class AccountOverviewPage extends BasePage {
     });
   }
 
+  /**
+   * Get a single account summary row by index.
+   */
   async getAccountSummary(index: number = 0): Promise<AccountSummary> {
     return StepRunner.run('Account Overview - get account summary', async () => {
       const accountNumber = (await this.getAccountNumber(index)).trim();
@@ -105,6 +108,9 @@ export class AccountOverviewPage extends BasePage {
     });
   }
 
+  /**
+   * Log and return all available account summaries.
+   */
   async logAccountSummaries(): Promise<AccountSummary[]> {
     return StepRunner.run('Account Overview - log all account summaries', async () => {
       const accountCount = await this.getAccountCount();
@@ -118,6 +124,9 @@ export class AccountOverviewPage extends BasePage {
     });
   }
 
+  /**
+   * Verify that at least the expected number of accounts is available.
+   */
   async verifyAccountsAvailable(minimumCount: number = 1): Promise<void> {
     await StepRunner.run('Account Overview - verify accounts are available', async () => {
       const accountCount = await this.getAccountCount();
@@ -129,6 +138,9 @@ export class AccountOverviewPage extends BasePage {
     });
   }
 
+  /**
+   * Wait until the account details page is loaded after opening an account.
+   */
   async waitForAccountDetailsPageLoaded(): Promise<void> {
     await StepRunner.run('Account Overview - verify account details page loaded', async () => {
       await this.waitUtils.waitForPageLoad();
@@ -142,6 +154,9 @@ export class AccountOverviewPage extends BasePage {
     });
   }
 
+  /**
+   * Get the number of transactions visible on the account details page.
+   */
   async getTransactionCount(): Promise<number> {
     return StepRunner.run('Account Overview - get transaction count', async () => {
       const transactionTableVisible = await this.page.locator(LOCATORS.TRANSACTION_TABLE).isVisible().catch(() => false);
@@ -154,6 +169,9 @@ export class AccountOverviewPage extends BasePage {
     });
   }
 
+  /**
+   * Log and return the most recent transactions up to the supplied limit.
+   */
   async logRecentTransactions(limit: number = 3): Promise<string[]> {
     return StepRunner.run('Account Overview - log recent transactions', async () => {
       const transactionCount = await this.getTransactionCount();
@@ -170,6 +188,9 @@ export class AccountOverviewPage extends BasePage {
     });
   }
 
+  /**
+   * Check whether any transaction in the history matches the given pattern.
+   */
   async hasTransactionMatching(pattern: RegExp): Promise<boolean> {
     return StepRunner.run('Account Overview - check transaction history for a match', async () => {
       const transactionCount = await this.getTransactionCount();

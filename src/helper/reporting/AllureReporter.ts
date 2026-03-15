@@ -147,6 +147,21 @@ export class AllureReporter {
         return;
       }
 
+      // ✅ Check file size first
+      const stats = fs.statSync(videoPath);
+      const fileSizeMB = stats.size / (1024 * 1024);
+
+      if (fileSizeMB > 50) {
+        Logger.warn(
+          `Video file too large (${fileSizeMB.toFixed(2)}MB), skipping attachment: ${videoPath}`
+        );
+        await AllureReporter.attachText(
+          'video-location',
+          `Video too large to attach. Location: ${videoPath}`
+        );
+        return;
+      }
+
       const videoBuffer = fs.readFileSync(videoPath);
 
       await test.info().attach(name, {
@@ -154,7 +169,7 @@ export class AllureReporter {
         contentType: 'video/webm',
       });
 
-      Logger.info(`Video attached: ${name}`);
+      Logger.info(`Video attached: ${name} (${fileSizeMB.toFixed(2)}MB)`);
     } catch (error) {
       Logger.error(`Failed to attach video: ${error}`);
     }
@@ -268,6 +283,36 @@ export class AllureReporter {
     tags.forEach((tag) => {
       test.info().annotations.push({ type: 'tag', description: tag });
     });
+  }
+
+  /**
+   * Attach CSV data to Allure report
+   *
+   * @param name - Attachment name
+   * @param data - Array of objects or CSV string
+   */
+  static async attachCSV(name: string, data: any[] | string): Promise<void> {
+    try {
+      let csvContent: string;
+
+      if (typeof data === 'string') {
+        csvContent = data;
+      } else {
+        // Convert array of objects to CSV
+        const headers = Object.keys(data[0] || {});
+        const rows = data.map((obj) => headers.map((h) => obj[h]).join(','));
+        csvContent = [headers.join(','), ...rows].join('\n');
+      }
+
+      await test.info().attach(name, {
+        body: csvContent,
+        contentType: 'text/csv',
+      });
+
+      Logger.info(`CSV attached: ${name}`);
+    } catch (error) {
+      Logger.error(`Failed to attach CSV: ${error}`);
+    }
   }
 
   /**

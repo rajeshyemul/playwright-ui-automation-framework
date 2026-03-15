@@ -16,6 +16,9 @@ export class EditBoxActions {
     this.pageActions = pageActions;
   }
 
+  /**
+   * Get the current active Playwright page from PageActions.
+   */
   private get page(): Page {
     return this.pageActions.getPage();
   }
@@ -97,5 +100,44 @@ export class EditBoxActions {
     const locator = LocatorFactory.getLocator(this.page, input);
     Logger.info('Clearing file upload');
     await locator.setInputFiles([]);
+  }
+
+  /**
+   * Press multiple keys in sequence on the target input.
+   */
+  public async pressKeys(input: string | Locator, keys: string[]): Promise<void> {
+    const locator = LocatorFactory.getLocator(this.page, input);
+    Logger.info(`Pressing keys: ${keys.join(', ')}`);
+
+    for (const key of keys) {
+      await locator.press(key);
+    }
+  }
+
+  /**
+   * Fill the input and verify the value was set correctly.
+   */
+  public async fillAndVerify(input: string | Locator, value: string): Promise<void> {
+    const locator = LocatorFactory.getLocator(this.page, input);
+    Logger.info(`Filling and verifying: ${value}`);
+
+    await locator.fill(value);
+
+    const actualValue = await locator.inputValue();
+    if (actualValue !== value) {
+      throw new Error(`Fill verification failed. Expected: "${value}", Actual: "${actualValue}"`);
+    }
+  }
+
+  /**
+   * Append text to the existing value without clearing the input first.
+   */
+  public async appendText(input: string | Locator, text: string): Promise<void> {
+    const locator = LocatorFactory.getLocator(this.page, input);
+    const currentValue = await locator.inputValue();
+    const newValue = currentValue + text;
+
+    Logger.info(`Appending "${text}" to "${currentValue}"`);
+    await locator.fill(newValue);
   }
 }

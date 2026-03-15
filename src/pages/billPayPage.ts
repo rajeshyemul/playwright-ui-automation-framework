@@ -66,6 +66,9 @@ export class BillPayPage extends BasePage {
     await this.submitBillPayment();
   }
 
+  /**
+   * Complete the bill payment flow and verify it succeeds.
+   */
   async payBillAndVerifySuccess(billData: BillPayData): Promise<void> {
     await StepRunner.run('Bill Pay - complete successful bill payment flow', async () => {
       await this.payBill(billData);
@@ -116,6 +119,9 @@ export class BillPayPage extends BasePage {
     });
   }
 
+  /**
+   * Capture the current bill payment outcome without asserting success.
+   */
   async getBillPayOutcome(): Promise<BillPayOutcome> {
     return StepRunner.run('Bill Pay - capture payment outcome', async () => {
       await this.waitUtils.waitForPageLoad();
@@ -137,6 +143,9 @@ export class BillPayPage extends BasePage {
     });
   }
 
+  /**
+   * Get the current bill payment error message text.
+   */
   async getBillPayErrorMessage(): Promise<string> {
     return StepRunner.run('Bill Pay - get payment error message', async () => {
       const errorText = (await this.page.locator(LOCATORS.ERROR_MESSAGE).textContent())?.trim() || '';

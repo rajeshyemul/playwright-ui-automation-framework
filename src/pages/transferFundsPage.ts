@@ -62,6 +62,9 @@ export class TransferFundsPage extends BasePage {
     await this.submitTransfer();
   }
 
+  /**
+   * Complete the transfer flow and verify it succeeds.
+   */
   async transferFundsAndVerifySuccess(transferData: TransferData): Promise<void> {
     await StepRunner.run('Transfer Funds - complete successful transfer flow', async () => {
       await this.transferFunds(transferData);
@@ -118,6 +121,9 @@ export class TransferFundsPage extends BasePage {
     });
   }
 
+  /**
+   * Get and log all account options available for a transfer.
+   */
   async getAvailableAccountPairs(): Promise<{ fromAccounts: string[]; toAccounts: string[] }> {
     return StepRunner.run('Transfer Funds - get all available transfer accounts', async () => {
       const fromAccounts = await this.getAvailableFromAccounts();
@@ -130,6 +136,9 @@ export class TransferFundsPage extends BasePage {
     });
   }
 
+  /**
+   * Capture the current transfer outcome without asserting success.
+   */
   async getTransferOutcome(): Promise<TransferOutcome> {
     return StepRunner.run('Transfer Funds - capture transfer outcome', async () => {
       await this.waitUtils.waitForPageLoad();

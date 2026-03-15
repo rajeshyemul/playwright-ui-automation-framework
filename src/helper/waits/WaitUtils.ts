@@ -1,12 +1,12 @@
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { PageActions } from '@helper/actions/PageActions';
 import { Logger } from '@helper/logger/Logger';
 
 /**
  * WaitUtils - Centralized wait operations
- * 
+ *
  * PURPOSE: All waiting logic in one place
- * 
+ *
  * BENEFITS:
  * - Consistent timeouts
  * - Automatic logging
@@ -99,7 +99,7 @@ export class WaitUtils {
     timeout: number = 30000
   ): Promise<void> {
     Logger.info(`Waiting for ${count} elements matching ${selector}`);
-    
+
     const startTime = Date.now();
     while (Date.now() - startTime < timeout) {
       const actualCount = await this.page.locator(selector).count();
@@ -109,7 +109,7 @@ export class WaitUtils {
       }
       await this.page.waitForTimeout(100);
     }
-    
+
     throw new Error(`Timeout: Expected ${count} elements, still waiting after ${timeout}ms`);
   }
 
@@ -122,9 +122,9 @@ export class WaitUtils {
   ): Promise<void> {
     const timeout = options?.timeout || 30000;
     const polling = options?.polling || 100;
-    
+
     Logger.info(`Waiting for custom function`);
-    
+
     const startTime = Date.now();
     while (Date.now() - startTime < timeout) {
       if (await fn()) {
@@ -133,7 +133,7 @@ export class WaitUtils {
       }
       await this.page.waitForTimeout(polling);
     }
-    
+
     throw new Error(`Timeout: Function did not return true within ${timeout}ms`);
   }
 
@@ -150,16 +150,40 @@ export class WaitUtils {
    */
   async waitForUrlContains(urlPart: string, timeout: number = 30000): Promise<void> {
     Logger.info(`Waiting for URL to contain: ${urlPart}`);
-    
-    const startTime = Date.now();
-    while (Date.now() - startTime < timeout) {
-      if (this.page.url().includes(urlPart)) {
-        Logger.info(`URL contains: ${urlPart}`);
-        return;
-      }
-      await this.page.waitForTimeout(100);
+
+    try {
+      const urlRegex = new RegExp(urlPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      await this.page.waitForURL(urlRegex, { timeout });
+      Logger.info(`URL contains: ${urlPart}`);
+    } catch (error) {
+      throw new Error(`Timeout: URL did not contain "${urlPart}" within ${timeout}ms`);
     }
-    
-    throw new Error(`Timeout: URL did not contain "${urlPart}" within ${timeout}ms`);
+  }
+  /**
+   * Wait for element to be enabled
+   */
+  async waitForEnabled(selector: string, timeout: number = 30000): Promise<void> {
+    Logger.info(`Waiting for ${selector} to be enabled`);
+    await expect(this.page.locator(selector)).toBeEnabled({ timeout });
+  }
+
+  /**
+   * Wait for element to be disabled
+   */
+  async waitForDisabled(selector: string, timeout: number = 30000): Promise<void> {
+    Logger.info(`Waiting for ${selector} to be disabled`);
+    await expect(this.page.locator(selector)).toBeDisabled({ timeout });
+  }
+
+  /**
+   * Wait for input to have specific value
+   */
+  async waitForValue(
+    selector: string,
+    value: string | RegExp,
+    timeout: number = 30000
+  ): Promise<void> {
+    Logger.info(`Waiting for ${selector} to have value: ${value}`);
+    await expect(this.page.locator(selector)).toHaveValue(value, { timeout });
   }
 }

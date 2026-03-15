@@ -78,6 +78,9 @@ export class RegistrationPage extends BasePage {
     await this.submitRegistration();
   }
 
+  /**
+   * Complete the registration flow and verify it succeeds.
+   */
   async registerAndVerifySuccess(userData: UserData): Promise<void> {
     await StepRunner.run('Registration - complete successful registration flow', async () => {
       await this.register(userData);
@@ -85,11 +88,17 @@ export class RegistrationPage extends BasePage {
     });
   }
 
+  /**
+   * Get the current heading text from the right panel.
+   */
   private async getRightPanelHeading(): Promise<string> {
     const heading = await this.page.locator('#rightPanel h1').textContent().catch(() => null);
     return heading?.trim() || '';
   }
 
+  /**
+   * Get the current message text from the right panel.
+   */
   private async getRightPanelMessage(): Promise<string> {
     const message = await this.page.locator(LOCATORS.SUCCESS_PARAGRAPH).first().textContent().catch(() => null);
     return message?.trim() || '';
@@ -159,6 +168,9 @@ export class RegistrationPage extends BasePage {
     });
   }
 
+  /**
+   * Capture the current registration outcome without asserting success.
+   */
   async getRegistrationOutcome(): Promise<RegistrationOutcome> {
     return StepRunner.run('Registration - capture submission outcome', async () => {
       await this.waitUtils.waitForPageLoad();

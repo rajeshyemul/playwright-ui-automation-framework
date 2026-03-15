@@ -11,21 +11,26 @@ export class GenerateReports {
   /**
    * Finds the most recent timestamped run folder under /reports.
    */
- public static getLatestRunFolder(): string {
-  const root = this.REPORT_ROOT;
-  const folders = fs.readdirSync(root)
-    .filter(name => /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/.test(name))
-    .map(name => path.join(root, name))
-    .filter(dir => fs.existsSync(path.join(dir, "allure-results")));
+  public static getLatestRunFolder(): string {
+    const root = this.REPORT_ROOT;
+    const folders = fs
+      .readdirSync(root)
+      .filter((name) => /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/.test(name))
+      .map((name) => path.join(root, name))
+      .filter((dir) => fs.existsSync(path.join(dir, 'allure-results')));
 
-  if (!folders.length) {
-    throw new Error("No run folder with allure-results found.");
+    if (!folders.length) {
+      const message = `
+No test run folders found in ${root}.
+Please run tests first: npm test
+  `.trim();
+      Logger.error(message);
+      throw new Error(message);
+    }
+
+    folders.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+    return folders[0];
   }
-
-  folders.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
-  return folders[0];
-}
-
 
   private static parseTimestamp(folder: string): Date {
     const [date, time] = folder.split('_');

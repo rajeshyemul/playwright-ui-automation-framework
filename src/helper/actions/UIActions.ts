@@ -1,13 +1,10 @@
-import { Page, test } from '@playwright/test';
+import { Locator, Page, test } from '@playwright/test';
 import { PageActions } from './PageActions';
 import { Logger } from '@helper/logger/Logger';
+import { LocatorFactory } from './LocatorFactory';
 
 /**
- * UIActions - Common UI interaction utilities
- * 
- * MIGRATION NOTES:
- * - OLD: Static methods accessing global pageFixture ❌
- * - NEW: Instance-based, receives PageActions in constructor ✅
+ *  UIActions - Common UI interactions with Allure step integration
  * 
  * USAGE:
  * class HomePage extends BasePage {
@@ -23,8 +20,22 @@ import { Logger } from '@helper/logger/Logger';
  *   }
  * }
  * 
- * OR: Use BasePage methods directly (recommended)
+/**
+ * 
+ * USE THIS WHEN:
+ * - You want automatic Allure step logging
+ * - You need simple, straightforward interactions
+ * 
+ * USE UIElementActions WHEN:
+ * - You need retry logic
+ * - You need advanced interactions (drag/drop, hover)
+ * - You need element state checking
+ * 
+ * BOTH ARE AVAILABLE IN BASEPAGE:
+ * - this.uiActions.click()
+ * - this.uiElementActions.clickElement()
  */
+ 
 export class UIActions {
   private pageActions: PageActions;
 
