@@ -20,8 +20,8 @@ test.describe('Enhanced Reporting Examples', () => {
       owner: TestOwners.USER_01,
       description: 'Verify that the home page loads correctly with all elements visible',
       tags: ['smoke', 'home'],
-      issues: ['123', '456'],
-      tmsIds: ['TC-001', 'TC-002'],
+      issues: [{ id: '123', url: 'https://jiratool.com/issue/123' }, { id: '456', url: 'https://jiratool.com/issue/456' }],
+      tmsIds: [{ id: 'TC-001', url: 'https://testmanagementtool.com/case/TC-001' }],
       component: 'HomePage',
     }
     );
@@ -83,8 +83,9 @@ test.describe('Enhanced Reporting Examples', () => {
       feature: Feature.HOME_PAGE,
       story: 'Demonstrate custom attachments',
       severity: Severity.MODERATE,
-      links: [{ name: 'Documentation', url: 'https://playwright.dev' }],
-      issues: ['JIRA-123']
+      links: [{ id: 'Documentation', url: 'https://playwright.dev' }],
+      issues: [{ id: 'JIRA-123', url: 'https://jiratool.com/issue/JIRA-123' }],
+      tmsIds: [{ id: 'TC-001', url: 'https://testmanagementtool.com/case/TC-001' }],
     });
 
     await homePage.navigateToHome();

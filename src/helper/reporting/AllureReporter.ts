@@ -70,17 +70,17 @@ export class AllureReporter {
     // External references - properly using annotations
     if (meta.issues) {
       meta.issues.forEach((issue) =>
-        test.info().annotations.push({ type: 'issue', description: issue })
+        test.info().annotations.push({ type: 'issue', description: issue.id })
       );
     }
     if (meta.tmsIds) {
       meta.tmsIds.forEach((tmsId) =>
-        test.info().annotations.push({ type: 'tms', description: tmsId })
+        test.info().annotations.push({ type: 'tms', description: tmsId.id })
       );
     }
     if (meta.links) {
       meta.links.forEach((link) =>
-        test.info().annotations.push({ type: 'link', description: `${link.name}: ${link.url}` })
+        test.info().annotations.push({ type: 'link', description: `${link.id}: ${link.url}` })
       );
     }
     if (meta.description) {

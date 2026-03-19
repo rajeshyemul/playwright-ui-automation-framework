@@ -7,3 +7,8 @@ export type ParsedXML = {
   errors: string;
   time: string;
 };
+
+export type Link = {
+  id: string;
+  url?: string;
+};
