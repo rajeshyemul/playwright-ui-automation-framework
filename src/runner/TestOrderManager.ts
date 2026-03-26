@@ -15,26 +15,53 @@ import { PathConstants } from '../support/constants/PathConstants';
 import { OrderedExecution } from './OrderedExecution';
 
 export class TestOrderManager {
+  /**
+   * Loads environment variables from a .env file if it exists.
+   * This allows users to configure the ordered runner using a .env file in addition to command-line arguments.
+   * The method uses the dotenv package to read the .env file and populate process.env with the defined variables.
+   * If no .env file is found, it simply leaves process.env unchanged, allowing for flexibility in how users choose to configure their test runs.
+   */
   private static loadEnvironment(): void {
     dotenv.config();
   }
 
+  /**
+   * Generates a timestamp for use in creating unique report directories.
+   * @returns A string representing the current timestamp in a specific format.
+   */
   private static timestamp(): string {
     return new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
   }
 
+  /**
+   * Logs a message to the console.
+   * @param message The message to log.
+   */
   private static log(message: string): void {
     process.stdout.write(`[TestOrderManager] ${message}\n`);
   }
 
+  /**
+   * Ensures that a directory exists, creating it if necessary.
+   * @param dirPath The path to the directory to ensure.
+   */
   private static ensureDir(dirPath: string): void {
     fs.mkdirSync(dirPath, { recursive: true });
   }
 
+  /**
+   * Reads a JSON file and returns its parsed content.
+   * @param filePath The path to the JSON file.
+   * @returns The parsed content of the JSON file.
+   */
   private static readJsonFile<T>(filePath: string): T {
     return JSON.parse(fs.readFileSync(filePath, 'utf8')) as T;
   }
 
+  /**
+   * Gets the path to the Playwright CLI.
+   * @returns The path to the Playwright CLI.
+   */
   private static getPlaywrightCliPath(): string {
     const cliPath = path.join(process.cwd(), 'node_modules', 'playwright', 'cli.js');
     if (!fs.existsSync(cliPath)) {
@@ -46,18 +73,39 @@ export class TestOrderManager {
     return cliPath;
   }
 
+  /**
+   * Gets the path to the Playwright configuration file.
+   * @returns The path to the Playwright configuration file.
+   */
   private static getPlaywrightConfigPath(): string {
     return path.join(process.cwd(), 'playwright.config.ts');
   }
 
+  /**
+   * Gets the path to the merge configuration file.
+   * @returns The path to the merge configuration file.
+   */
   private static getMergeConfigPath(): string {
     return path.join(process.cwd(), 'src', 'runner', 'playwright.merge.config.ts');
   }
 
+  /**
+   * Creates the root directory for the test run reports, using either a specified environment variable or a default path that includes a timestamp.
+   * This ensures that each test run has a unique directory for storing its results, preventing conflicts and making it easier to organize and access past test runs.
+   * @returns
+   */
   private static createReportRoot(): string {
     return process.env.REPORT_ROOT || path.join(process.cwd(), 'reports', this.timestamp());
   }
 
+  /**
+   * Spawns a child process to run Playwright with the specified arguments and environment variables.
+   * This method is responsible for executing Playwright commands in a separate process, allowing the ordered runner to control the execution flow and capture results without blocking the main process.
+   * It returns a promise that resolves with the exit code of the child process, enabling the caller to determine if the Playwright command executed successfully or if it encountered errors.
+   * @param args  - The command-line arguments to pass to the Playwright CLI.
+   * @param env  - The environment variables to set for the child process, allowing for dynamic configuration of the Playwright execution context.
+   * @returns A promise that resolves with the exit code of the child process, indicating the success or failure of the Playwright command.
+   */
   private static async spawnPlaywrightProcess(
     args: string[],
     env: NodeJS.ProcessEnv
@@ -74,10 +122,21 @@ export class TestOrderManager {
     });
   }
 
+  /**
+   * Gets the location arguments for a bucket of tests.
+   * @param bucket The bucket plan containing the tests.
+   * @returns An array of location arguments for each test in the bucket.
+   */
   private static getBucketLocationArgs(bucket: BucketPlan): string[] {
     return bucket.tests.map((test) => `${path.normalize(test.file)}:${test.line}`);
   }
 
+  /**
+   * Discovers tests for a given report root and forwarded arguments.
+   * @param reportRoot The root directory for the test run reports.
+   * @param forwardedArgs The command-line arguments to forward to the Playwright CLI.
+   * @returns A promise resolving to the list of discovered test cases.
+   */
   private static async discoverTests(
     reportRoot: string,
     forwardedArgs: string[]
@@ -119,6 +178,11 @@ export class TestOrderManager {
     return OrderedReportParser.parseDiscoveryReport(this.readJsonFile<any>(discoveryOutputPath));
   }
 
+  /**
+   * Summarizes the test results for a bucket of tests.
+   * @param bucketTests The list of executed tests in the bucket.
+   * @returns A summary of the test results.
+   */
   private static summarizeBucketTests(
     bucketTests: ReturnType<typeof OrderedReportParser.parseExecutedTests>['tests']
   ): BucketExecutionRecord['stats'] {
@@ -207,6 +271,13 @@ export class TestOrderManager {
     };
   }
 
+  /**
+   * Executes a single bucket of tests.
+   * @param bucket The bucket plan containing the tests to execute.
+   * @param reportRoot The root directory for the test run reports.
+   * @param forwardedArgs The command-line arguments to forward to the Playwright CLI.
+   * @returns A promise resolving to the execution record for the bucket.
+   */
   private static async executeBucket(
     bucket: BucketPlan,
     reportRoot: string,
@@ -296,6 +367,11 @@ export class TestOrderManager {
     };
   }
 
+  /**
+   * Merges the blob reports for a given report root.
+   * @param reportRoot The root directory for the test run reports.
+   * @returns A promise resolving to the exit code of the merge process.
+   */
   private static async mergeBlobReports(reportRoot: string): Promise<number> {
     const blobDir = path.join(reportRoot, PathConstants.BLOB_REPORTS_PATH);
 
@@ -312,6 +388,14 @@ export class TestOrderManager {
     );
   }
 
+  /**
+   * Builds a summary of the ordered test run.
+   * @param reportRoot The root directory for the test run reports.
+   * @param mode The execution mode.
+   * @param failurePolicy The failure policy.
+   * @param dryRun Whether to perform a dry run.
+   * @returns A promise resolving to the summary of the test run.
+   */
   private static buildSummary(
     reportRoot: string,
     mode: ReturnType<typeof OrderedExecution.resolveOrderMode>,
@@ -357,6 +441,11 @@ export class TestOrderManager {
     };
   }
 
+  /** Creates a stop reason message based on the bucket that caused the failure and the failure policy.
+   * @param bucket - The bucket that was executed when the failure occurred, containing metadata about its criticality and label.
+   * @param failurePolicy - The failure policy that determines when to abort the test run, such as 'immediate' or 'critical-only'.
+   * @returns A string message explaining why the test run was aborted, including details about the bucket and the failure policy.
+   */
   private static createStopReason(
     bucket: BucketPlan,
     failurePolicy: ReturnType<typeof OrderedExecution.resolveFailurePolicy>
@@ -368,8 +457,15 @@ export class TestOrderManager {
     return `Execution aborted after critical failure in ${bucket.label}.`;
   }
 
+  /** Runs the ordered test execution process, including loading environment variables, discovering tests, building buckets, executing tests, and generating a summary report.
+   * This is the main entry point for the TestOrderManager and orchestrates the entire flow of the ordered test execution.
+   * It handles configuration, error handling, and reporting to ensure that tests are executed in the defined order and that results are captured accurately.
+   * @returns A promise that resolves when the test execution process is complete.
+   */
   public static async run(): Promise<void> {
     this.loadEnvironment();
+    const enableGrouping = process.env.ENABLE_BUCKET_GROUPING === 'true';
+    this.log(`Bucket Grouping: ${enableGrouping ? 'ENABLED (safe, mode-aware)' : 'DISABLED'}`);
 
     const forwardedArgs = process.argv.slice(2);
     const mode = OrderedExecution.resolveOrderMode(process.env.ORDER_MODE);
@@ -423,7 +519,12 @@ export class TestOrderManager {
     const bucketRecords: BucketExecutionRecord[] = [];
     let stopReason: string | undefined;
     let encounteredFailure = false;
-    const executionGroups = OrderedExecution.groupBuckets(buckets);
+    const executionGroups = enableGrouping
+      ? OrderedExecution.groupBuckets(buckets)
+      : buckets.map((bucket) => [bucket]);
+    this.log(
+      `Execution Units: ${executionGroups.map((g) => g.map((b) => b.key).join('+')).join(' | ')}`
+    );
 
     if (!dryRun) {
       for (const group of executionGroups) {
@@ -500,6 +601,7 @@ export class TestOrderManager {
   }
 }
 
+/** Runs the ordered test execution process. */
 TestOrderManager.run().catch((error: Error) => {
   process.stderr.write(`[TestOrderManager] ${error.message}\n`);
   process.exitCode = 1;

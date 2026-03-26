@@ -67,6 +67,12 @@ This separation is useful:
 - planning is pure and testable
 - execution stays in the runner
 
+Grouping is controlled by `ENABLE_BUCKET_GROUPING`:
+
+- `true` enables the safe grouping pass
+- `false` keeps one Playwright launch per bucket
+- the grouping algorithm remains safe for `basic`, `priority`, and `custom` modes because it never merges boundary buckets with non-boundary buckets
+
 ### 5. Execution
 
 Each group becomes one Playwright launch.

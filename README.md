@@ -327,6 +327,12 @@ Authoring rules:
 
 Ordered runs generate the standard merged Playwright reports plus `ordered-summary.json` and `ordered-summary.html` in the run folder.
 
+Grouping is controlled by the environment:
+
+- `ENABLE_BUCKET_GROUPING=true` enables safe bucket grouping
+- when enabled, grouping is mode-aware and will not merge boundary buckets with non-boundary buckets
+- when disabled, each bucket runs as its own Playwright invocation
+
 ## Example Test
 
 ```typescript

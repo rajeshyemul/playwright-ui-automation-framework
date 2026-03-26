@@ -80,6 +80,28 @@ test('builds priority mode buckets and preserves no-priority tests', { tag: ['@r
   expect(buckets[5].tests.map((item) => item.id)).toEqual(['4']);
 });
 
+test('groups basic mode safely without changing bucket order', { tag: ['@runLast', '@P4'] }, async () => {
+  const tests = [
+    createTestCase('1', 'run first', ['@runFirst', '@P1'], 'tests/a.spec.ts', 10),
+    createTestCase('2', 'default', [], 'tests/a.spec.ts', 20),
+    createTestCase('3', 'run last', ['@runLast', '@P4'], 'tests/a.spec.ts', 30),
+  ];
+
+  const buckets = OrderedExecution.buildBuckets(tests, {
+    mode: 'basic',
+    scopeTags: [],
+    orderedTags: [],
+  });
+
+  const groups = OrderedExecution.groupBuckets(buckets);
+
+  expect(groups.map((group) => group.map((bucket) => bucket.key))).toEqual([
+    ['run-first'],
+    ['default'],
+    ['run-last'],
+  ]);
+});
+
 test('groups non-critical buckets while preserving boundary isolation', { tag: ['@runLast', '@P4'] }, async () => {
   const tests = [
     createTestCase('1', 'run first', ['@runFirst', '@P1'], 'tests/a.spec.ts', 10),
@@ -110,6 +132,30 @@ test('groups non-critical buckets while preserving boundary isolation', { tag: [
     '4',
     '5',
     '6',
+  ]);
+});
+
+test('groups custom mode by preserving caller order and boundary isolation', { tag: ['@runLast', '@P4'] }, async () => {
+  const tests = [
+    createTestCase('1', 'priority 3', ['@P3'], 'tests/a.spec.ts', 10),
+    createTestCase('2', 'priority 1', ['@P1'], 'tests/a.spec.ts', 20),
+    createTestCase('3', 'no priority', [], 'tests/a.spec.ts', 30),
+  ];
+
+  const buckets = OrderedExecution.buildBuckets(tests, {
+    mode: 'custom',
+    scopeTags: [],
+    orderedTags: ['@P3', '@P1', RunnerConstants.NO_PRIORITY_TOKEN],
+  });
+
+  const groups = OrderedExecution.groupBuckets(buckets);
+
+  expect(groups.map((group) => group.map((bucket) => bucket.key))).toEqual([
+    ['run-first'],
+    ['p3'],
+    ['p1'],
+    ['no-priority'],
+    ['run-last'],
   ]);
 });
 
