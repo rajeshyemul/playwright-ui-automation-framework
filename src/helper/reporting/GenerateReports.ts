@@ -8,6 +8,31 @@ import { Logger } from '../logger/Logger';
 export class GenerateReports {
   private static readonly REPORT_ROOT = path.resolve(process.cwd(), 'reports');
 
+  private static openFile(filePath: string): void {
+    const normalizedPath = path.resolve(filePath);
+    let command = '';
+
+    if (process.platform === 'darwin') {
+      command = `open "${normalizedPath}"`;
+    } else if (process.platform === 'win32') {
+      command = `start "" "${normalizedPath}"`;
+    } else {
+      command = `xdg-open "${normalizedPath}"`;
+    }
+
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        Logger.error(`Failed to open file: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        Logger.error(stderr);
+        return;
+      }
+      Logger.info(stdout);
+    });
+  }
+
   private static getCommandEnv(): NodeJS.ProcessEnv {
     const env = { ...process.env };
     const configuredJavaHome = env.JAVA_HOME;
@@ -95,6 +120,20 @@ Please run tests first: npm test
   }
 
   /**
+   * Opens the ordered execution summary HTML for the latest run.
+   */
+  public static openPriorityReport(): void {
+    const runPath = this.getLatestRunFolder();
+    const priorityReportPath = path.join(runPath, 'ordered-summary.html');
+
+    if (!fs.existsSync(priorityReportPath)) {
+      throw new Error(`Priority report not found at ${priorityReportPath}`);
+    }
+
+    this.openFile(priorityReportPath);
+  }
+
+  /**
    * Generates Allure report for the latest run.
    * If open=true, it will also open the report.
    */
@@ -134,6 +173,8 @@ if (require.main === module) {
 
   if (mode === 'html') {
     GenerateReports.openHtmlReport();
+  } else if (mode === 'priority') {
+    GenerateReports.openPriorityReport();
   } else if (mode === 'allure') {
     const open = process.argv.includes('--open');
     GenerateReports.generateAllureReport(open);
@@ -141,6 +182,7 @@ if (require.main === module) {
     Logger.info(`
 Usage:
   npx ts-node src/helper/reporting/GenerateReports.ts html
+  npx ts-node src/helper/reporting/GenerateReports.ts priority
   npx ts-node src/helper/reporting/GenerateReports.ts allure [--open]
 `);
   }

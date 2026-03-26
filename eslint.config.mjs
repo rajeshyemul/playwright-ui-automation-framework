@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
+import customESLintRules from './src/helper/customESLintRules/index.mjs';
 
 export default tseslint.config(
   {
@@ -43,6 +44,15 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+    },
+  },
+  {
+    files: ['tests/**/*.ts'],
+    plugins: {
+      'custom-eslint-rules': customESLintRules,
+    },
+    rules: {
+      'custom-eslint-rules/validate-playwright-priority-tags': 'error',
     },
   }
 );

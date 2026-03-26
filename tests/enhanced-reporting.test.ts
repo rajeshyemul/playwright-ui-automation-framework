@@ -10,7 +10,7 @@ const runFailureDemo = process.env.RUN_FAILURE_DEMOS === 'true';
 
 test.describe('Enhanced Reporting Examples', () => {
   
-  test('Example 1: Basic reporting with steps', async ({ homePage }) => {
+  test('Example 1: Basic reporting with steps', { tag: ['@runLast', '@P4'] }, async ({ homePage }) => {
     // Attach metadata
     await AllureReporter.attachDetails(
       {
@@ -40,7 +40,7 @@ test.describe('Enhanced Reporting Examples', () => {
     });
   });
 
-  test('Example 2: Using StepRunner', async ({ homePage }) => {
+  test('Example 2: Using StepRunner', { tag: ['@runLast', '@P4'] }, async ({ homePage }) => {
     await AllureReporter.attachDetails({
       epic: Epic.UI_TESTING,
       feature: Feature.NAVIGATION,
@@ -58,7 +58,7 @@ test.describe('Enhanced Reporting Examples', () => {
     });
   });
 
-  test('Example 3: Step groups and nested steps', async ({ homePage }) => {
+  test('Example 3: Step groups and nested steps', { tag: ['@runLast', '@P4'] }, async ({ homePage }) => {
     await AllureReporter.attachDetails({
       epic: Epic.UI_TESTING,
       feature: Feature.HOME_PAGE,
@@ -77,7 +77,7 @@ test.describe('Enhanced Reporting Examples', () => {
     });
   });
 
-  test('Example 4: Custom attachments', async ({ homePage, pageActions }) => {
+  test('Example 4: Custom attachments', { tag: ['@runLast', '@P4'] }, async ({ homePage, pageActions }) => {
     await AllureReporter.attachDetails({
       epic: Epic.UI_TESTING,
       feature: Feature.HOME_PAGE,
@@ -100,7 +100,7 @@ test.describe('Enhanced Reporting Examples', () => {
     });
   });
 
-  test('Example 5: Sequential steps', async ({ homePage }) => {
+  test('Example 5: Sequential steps', { tag: ['@runLast', '@P4'] }, async ({ homePage }) => {
     await AllureReporter.attachDetails({
       epic: Epic.UI_TESTING,
       feature: Feature.HOME_PAGE,
@@ -129,7 +129,7 @@ test.describe('Enhanced Reporting Examples', () => {
     'Set RUN_FAILURE_DEMOS=true to execute the intentional failure example.'
   );
 
-  test('Example 6: Intentional failure to show auto-capture', async ({ homePage }) => {
+  test('Example 6: Intentional failure to show auto-capture', { tag: ['@runLast', '@P4'] }, async ({ homePage }) => {
     await AllureReporter.attachDetails({
       epic: Epic.UI_TESTING,
       feature: Feature.HOME_PAGE,

@@ -11,39 +11,42 @@ import { Logger } from '@helper/logger/Logger';
 import { TestDataProvider } from '@support/testdata/TestDataProvider';
 
 test.describe('ParaBank - End-to-End Tests', () => {
-  test('TC-E2E-001: Complete User Registration and First Login', async ({ pageActions }) => {
-    await AllureReporter.attachDetails({
-      epic: 'End-to-End Tests',
-      feature: 'User Onboarding',
-      story: 'Complete registration and login workflow',
-      severity: 'critical',
-    });
+  test('TC-E2E-001: Complete User Registration and First Login',
+    { tag: ['@P1'] },
+    async ({ pageActions }) => {
+      await AllureReporter.attachDetails({
+        epic: 'End-to-End Tests',
+        feature: 'User Onboarding',
+        story: 'Complete registration and login workflow',
+        severity: 'critical',
+      });
 
-    const registrationPage = new RegistrationPage(pageActions);
-    const loginPage = new LoginPage(pageActions);
-    const accountOverviewPage = new AccountOverviewPage(pageActions);
-    const userData = TestDataProvider.getE2eTestUser();
+      const registrationPage = new RegistrationPage(pageActions);
+      const loginPage = new LoginPage(pageActions);
+      const accountOverviewPage = new AccountOverviewPage(pageActions);
+      const userData = TestDataProvider.getE2eTestUser();
 
-    await test.step('Register a new banking user', async () => {
-      await registrationPage.navigateToRegistration();
-      await registrationPage.registerAndVerifySuccess(userData);
-    });
+      await test.step('Register a new banking user', async () => {
+        await registrationPage.navigateToRegistration();
+        await registrationPage.registerAndVerifySuccess(userData);
+      });
 
-    await test.step('Log out and sign back in with the new credentials', async () => {
-      await registrationPage.logout();
-      await loginPage.navigateToLogin();
-      await loginPage.loginAndVerify(userData.username, userData.password);
-    });
+      await test.step('Log out and sign back in with the new credentials', async () => {
+        await registrationPage.logout();
+        await loginPage.navigateToLogin();
+        await loginPage.loginAndVerify(userData.username, userData.password);
+      });
 
-    await test.step('Validate the newly created account portfolio', async () => {
-      await accountOverviewPage.verifyAccountOverviewPageLoaded();
-      await accountOverviewPage.verifyWelcomeMessage(userData.firstName);
-      await accountOverviewPage.verifyAccountsAvailable();
-      await accountOverviewPage.logAccountSummaries();
-    });
-  });
+      await test.step('Validate the newly created account portfolio', async () => {
+        await accountOverviewPage.verifyAccountOverviewPageLoaded();
+        await accountOverviewPage.verifyWelcomeMessage(userData.firstName);
+        await accountOverviewPage.verifyAccountsAvailable();
+        await accountOverviewPage.logAccountSummaries();
+      });
+    }
+  );
 
-  test('TC-E2E-002: Account Management Workflow', async ({ pageActions }) => {
+  test('TC-E2E-002: Account Management Workflow', { tag: ['@P2'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'End-to-End Tests',
       feature: 'Account Management',
@@ -93,7 +96,7 @@ test.describe('ParaBank - End-to-End Tests', () => {
     });
   });
 
-  test('TC-E2E-003: Funds Transfer Workflow', async ({ pageActions }) => {
+  test('TC-E2E-003: Funds Transfer Workflow', { tag: ['@P2'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'End-to-End Tests',
       feature: 'Funds Transfer',
@@ -147,7 +150,7 @@ test.describe('ParaBank - End-to-End Tests', () => {
     });
   });
 
-  test('TC-E2E-004: Bill Payment Workflow', async ({ pageActions }) => {
+  test('TC-E2E-004: Bill Payment Workflow', { tag: ['@P2'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'End-to-End Tests',
       feature: 'Bill Payment',
@@ -210,7 +213,7 @@ test.describe('ParaBank - End-to-End Tests', () => {
     });
   });
 
-  test('TC-E2E-007: Complete Banking Session', async ({ pageActions }) => {
+  test('TC-E2E-007: Complete Banking Session', { tag: ['@P1'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'End-to-End Tests',
       feature: 'Complete Banking Session',
@@ -294,7 +297,7 @@ test.describe('ParaBank - End-to-End Tests', () => {
     });
   });
 
-  test('TC-E2E-008: Error Recovery and Validation', async ({ pageActions }) => {
+  test('TC-E2E-008: Error Recovery and Validation', { tag: ['@P2'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'End-to-End Tests',
       feature: 'Error Handling',

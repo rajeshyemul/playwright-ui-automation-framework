@@ -10,8 +10,12 @@ export class PathConstants {
 
   static readonly LOG_FOLDER_PATH = `logFiles`;
   static readonly FOLDER_ARTIFACTS = `artifacts`;
+  static readonly BLOB_REPORTS_PATH = `blob-report`;
+  static readonly ORDERED_RESULTS_PATH = `ordered-results`;
   static readonly ALLURE_REPORTS_PATH = `allure-results`;
   static readonly HTML_REPORTS_PATH = `html`;
   static readonly JSON_REPORTS_PATH = `results/results.json`;
   static readonly JUNIT_REPORTS_PATH = `results/results.xml`;
+  static readonly ORDERED_SUMMARY_JSON_PATH = `ordered-summary.json`;
+  static readonly ORDERED_SUMMARY_HTML_PATH = `ordered-summary.html`;
 }

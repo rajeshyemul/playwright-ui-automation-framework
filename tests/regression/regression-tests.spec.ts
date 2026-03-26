@@ -9,7 +9,7 @@ import { Logger } from '@helper/logger/Logger';
 import { TestDataProvider } from '@support/testdata/TestDataProvider';
 
 test.describe('ParaBank - Regression Tests', () => {
-  test('TC-REG-001: Registration Form Validation', async ({ pageActions }) => {
+  test('TC-REG-001: Registration Form Validation', { tag: ['@P2'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'Regression Tests',
       feature: 'Registration Validation',
@@ -58,7 +58,7 @@ test.describe('ParaBank - Regression Tests', () => {
     });
   });
 
-  test('TC-REG-002: Login Error Handling', async ({ pageActions }) => {
+  test('TC-REG-002: Login Error Handling', { tag: ['@P2'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'Regression Tests',
       feature: 'Login Error Handling',
@@ -87,7 +87,7 @@ test.describe('ParaBank - Regression Tests', () => {
     });
   });
 
-  test('TC-REG-003: Transfer Funds Functionality', async ({ pageActions }) => {
+  test('TC-REG-003: Transfer Funds Functionality', { tag: ['@P2'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'Regression Tests',
       feature: 'Funds Transfer',
@@ -121,7 +121,7 @@ test.describe('ParaBank - Regression Tests', () => {
     });
   });
 
-  test('TC-REG-004: Bill Pay Functionality', async ({ pageActions }) => {
+  test('TC-REG-004: Bill Pay Functionality', { tag: ['@P2'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'Regression Tests',
       feature: 'Bill Payment',
@@ -165,7 +165,7 @@ test.describe('ParaBank - Regression Tests', () => {
     });
   });
 
-  test('TC-REG-005: Account Details and History', async ({ pageActions }) => {
+  test('TC-REG-005: Account Details and History', { tag: ['@P3'] }, async ({ pageActions }) => {
     await AllureReporter.attachDetails({
       epic: 'Regression Tests',
       feature: 'Account Details',

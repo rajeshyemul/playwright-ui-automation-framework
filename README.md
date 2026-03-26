@@ -20,6 +20,8 @@ It is built around:
 For a complete explanation of how the framework works internally, read:
 
 - [Framework Architecture Guide](docs/framework-architecture.md)
+- [Priority-Based Execution Overview](docs/priority-based-execution/README.md)
+- [Legacy Test Order Manager Guide](docs/test-order-manager-implementation.md)
 
 Use this `README.md` for setup, daily usage, and repository navigation.
 
@@ -63,6 +65,15 @@ npm run test:integration
 
 # Full suite
 npm test
+
+# Priority-based ordered execution
+npm run test:ordered
+
+# Basic ordered execution
+npm run test:ordered:basic
+
+# Preview ordered buckets without running tests
+npm run test:ordered:dry-run
 ```
 
 ### View Reports
@@ -91,6 +102,15 @@ npm run test:integration
 
 # Run framework verification tests
 npm run test:framework
+
+# Run priority-based ordered execution
+npm run test:ordered
+
+# Run basic ordered execution
+npm run test:ordered:basic
+
+# Preview ordered buckets without executing tests
+npm run test:ordered:dry-run
 
 # Run in headed mode
 npm run test:headed
@@ -147,6 +167,8 @@ At a high level:
 6. Page objects use helper layers for actions, waits, assertions, and reporting.
 7. Reports are written to timestamped folders under `reports/`.
 
+For ordered runs, Playwright executes the planned buckets under one shared run folder and then merges them back into a single HTML, JSON, and JUnit report set.
+
 The detailed flow is documented in the architecture guide.
 
 ## Repository Structure
@@ -159,11 +181,13 @@ playwright-ui-automation-framework/
 ├── .husky/
 │   └── pre-commit                    # Pre-commit enforcement
 ├── docs/
-│   └── framework-architecture.md     # Full framework handbook
+│   ├── framework-architecture.md     # Full framework handbook
+│   └── priority-based-execution/     # Ordered execution handbook and module docs
 ├── src/
 │   ├── config/                       # Runtime config and lifecycle hooks
 │   ├── helper/                       # Actions, waits, asserts, logging, reporting
 │   ├── pages/                        # Page objects and domain workflows
+│   ├── runner/                       # Ordered execution orchestration and report merging
 │   ├── support/                      # Fixtures, locators, constants, enums, test data
 │   └── utils/                        # Reusable non-UI utilities
 ├── tests/
@@ -191,6 +215,7 @@ Typical outputs include:
 - JUnit report
 - JSON report
 - Allure results
+- ordered summary JSON and HTML for ordered executions
 - screenshots, videos, traces, and failure attachments
 - run-specific framework log files
 
@@ -209,6 +234,10 @@ Important values:
 - `CI=true|false`
 - `CI_WORKERS=1`
 - `LOG_LEVEL=info|debug|warn|error`
+- `ORDER_MODE=basic|priority|custom`
+- `ORDERED_TAGS=P1,P3,NoPriority`
+- `SCOPE_TAGS=@smoke,@payments`
+- `FAILURE_POLICY=critical|continue|immediate`
 
 If `BASE_URL` is not set, the framework falls back to the configured environment-specific URL and then to the default ParaBank URL.
 
@@ -253,6 +282,50 @@ GitHub Actions runs:
 - lint
 - framework verification tests
 - `npm pack --dry-run`
+
+## Test Order Manager
+
+The framework now includes a deterministic priority runner so critical flows can execute first and lower-risk suites can wait their turn.
+
+For a full implementation walkthrough, start with:
+
+- [Priority-Based Execution Overview](docs/priority-based-execution/README.md)
+
+Execution plans:
+
+- `basic`: `@runFirst -> default -> @runLast`
+- `priority`: `@runFirst -> @P1 -> @P2 -> @P3 -> @P4 -> NoPriority -> @runLast`
+- `custom`: `@runFirst -> ORDERED_TAGS order -> @runLast`
+
+Run examples:
+
+```bash
+# Recommended priority plan
+npm run test:ordered
+
+# Custom ordered run
+ORDER_MODE=custom ORDERED_TAGS=P1,P3,NoPriority npm run test:ordered -- --headed
+
+# Restrict ordered execution to tests that also carry one of the scope tags
+SCOPE_TAGS=@smoke,@banking npm run test:ordered
+```
+
+Failure policy:
+
+- `critical` stops after a failed `@runFirst` bucket in `basic` mode
+- `critical` stops after a failed `@runFirst` or `@P1` bucket in `priority` and `custom` modes
+- `continue` executes every planned bucket
+- `immediate` stops after the first failed bucket
+
+Authoring rules:
+
+- Use Playwright `details.tag` metadata, for example `test('...', { tag: ['@P1'] }, async () => {})`
+- Boundary tags are `@runFirst` and `@runLast`
+- Priority tags are `@P1`, `@P2`, `@P3`, and `@P4`
+- A test must not declare more than one priority tag
+- A test must not declare both `@runFirst` and `@runLast`
+
+Ordered runs generate the standard merged Playwright reports plus `ordered-summary.json` and `ordered-summary.html` in the run folder.
 
 ## Example Test
 

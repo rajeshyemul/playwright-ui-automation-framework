@@ -6,10 +6,10 @@ import { AllureReporter } from './AllureReporter';
  * StepRunner - Enhanced step execution with error handling
  *
  * ENHANCEMENTS:
- * ✅ Automatic screenshot on step failure
- * ✅ Step timing information
- * ✅ Nested step support
- * ✅ Step description templates
+ * Automatic screenshot on step failure
+ * Step timing information
+ * Nested step support
+ * Step description templates
  */
 export class StepRunner {
   /**
@@ -38,7 +38,7 @@ export class StepRunner {
       });
 
       const duration = Date.now() - startTime;
-      Logger.info(`✅ STEP PASSED: ${stepName} (${duration}ms)`);
+      Logger.info(`STEP PASSED: ${stepName} (${duration}ms)`);
 
       if (options?.logResult) {
         const resultStr =
@@ -49,7 +49,7 @@ export class StepRunner {
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      Logger.error(`❌ STEP FAILED: ${stepName} (${duration}ms)`);
+      Logger.error(`STEP FAILED: ${stepName} (${duration}ms)`);
       Logger.error(`Error: ${error}`);
 
       // Re-throw to preserve test failure
@@ -80,7 +80,7 @@ export class StepRunner {
     await test.step(groupName, async () => {
       Logger.info(`📁 STEP GROUP: ${groupName}`);
       await steps();
-      Logger.info(`✅ STEP GROUP COMPLETE: ${groupName}`);
+      Logger.info(`STEP GROUP COMPLETE: ${groupName}`);
     });
   }
 
@@ -99,7 +99,7 @@ export class StepRunner {
     if (condition) {
       await StepRunner.run(stepName, stepBody);
     } else {
-      Logger.info(`⏭️  STEP SKIPPED: ${stepName} (condition not met)`);
+      Logger.info(`STEP SKIPPED: ${stepName} (condition not met)`);
     }
   }
 

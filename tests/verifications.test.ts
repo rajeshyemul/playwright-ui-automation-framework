@@ -15,7 +15,7 @@ import { test, expect } from '@support/PageFixture';
 
 test.describe('Phase 1: Parallel Execution Verification', () => {
   
-  test('Test 1: Should have isolated pageActions', async ({ pageActions }) => {
+  test('Test 1: Should have isolated pageActions', { tag: ['@runLast', '@P4'] }, async ({ pageActions }) => {
     const page = pageActions.getPage();
     const url1 = 'https://example.com';
     
@@ -25,7 +25,7 @@ test.describe('Phase 1: Parallel Execution Verification', () => {
     expect(page.url()).toBe(url1 + '/');
   });
 
-  test('Test 2: Should have different pageActions instance', async ({ pageActions }) => {
+  test('Test 2: Should have different pageActions instance', { tag: ['@runLast', '@P4'] }, async ({ pageActions }) => {
     const page = pageActions.getPage();
     const url2 = 'https://playwright.dev';
     
@@ -36,19 +36,19 @@ test.describe('Phase 1: Parallel Execution Verification', () => {
     expect(page.url()).toContain('playwright.dev');
   });
 
-  test('Test 3: Concurrent test - Example.com', async ({ pageActions }) => {
+  test('Test 3: Concurrent test - Example.com', { tag: ['@runLast', '@P4'] }, async ({ pageActions }) => {
     await pageActions.gotoURL('https://example.com', 'Test 3');
     const url = await pageActions.getCurrentUrl();
     expect(url).toContain('example.com');
   });
 
-  test('Test 4: Concurrent test - Playwright', async ({ pageActions }) => {
+  test('Test 4: Concurrent test - Playwright', { tag: ['@runLast', '@P4'] }, async ({ pageActions }) => {
     await pageActions.gotoURL('https://playwright.dev', 'Test 4');
     const url = await pageActions.getCurrentUrl();
     expect(url).toContain('playwright.dev');
   });
 
-  test('Test 5: Concurrent test - GitHub', async ({ pageActions }) => {
+  test('Test 5: Concurrent test - GitHub', { tag: ['@runLast', '@P4'] }, async ({ pageActions }) => {
     await pageActions.gotoURL('https://github.com', 'Test 5');
     const url = await pageActions.getCurrentUrl();
     expect(url).toContain('github.com');
@@ -57,19 +57,19 @@ test.describe('Phase 1: Parallel Execution Verification', () => {
 
 test.describe('Phase 1: Fixture Injection Verification', () => {
   
-  test('Should inject pageActions fixture', async ({ pageActions }) => {
+  test('Should inject pageActions fixture', { tag: ['@runLast', '@P4'] }, async ({ pageActions }) => {
     expect(pageActions).toBeDefined();
     expect(pageActions.getPage()).toBeDefined();
     expect(pageActions.getContext()).toBeDefined();
   });
 
-  test('Should inject homePage fixture', async ({ loginPage }) => {
+  test('Should inject homePage fixture', { tag: ['@runLast', '@P4'] }, async ({ loginPage }) => {
     expect(loginPage).toBeDefined();
     // LoginPage should have BasePage methods
     expect(typeof loginPage.navigate).toBe('function');
   });
 
-  test('Should inject multiple fixtures', async ({ pageActions, loginPage, registrationPage }) => {
+  test('Should inject multiple fixtures', { tag: ['@runLast', '@P4'] }, async ({ pageActions, loginPage, registrationPage }) => {
     expect(pageActions).toBeDefined();
     expect(loginPage).toBeDefined();
     expect(registrationPage).toBeDefined();
@@ -78,14 +78,14 @@ test.describe('Phase 1: Fixture Injection Verification', () => {
 
 test.describe('Phase 1: BasePage Inheritance Verification', () => {
   
-  test('HomePage should inherit BasePage methods', async ({ loginPage }) => {
+  test('HomePage should inherit BasePage methods', { tag: ['@runLast', '@P4'] }, async ({ loginPage }) => {
     // Verify BasePage methods are available
     expect(typeof loginPage.navigate).toBe('function');
     expect(typeof loginPage.reload).toBe('function');
     expect(typeof loginPage.getCurrentUrl).toBe('function');
   });
 
-  test('RegistrationPage should inherit BasePage methods', async ({ registrationPage }) => {
+  test('RegistrationPage should inherit BasePage methods', { tag: ['@runLast', '@P4'] }, async ({ registrationPage }) => {
     expect(typeof registrationPage.navigate).toBe('function');
     expect(typeof registrationPage.reload).toBe('function');
   });
