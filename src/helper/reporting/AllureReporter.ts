@@ -1,17 +1,24 @@
-import { test } from '@playwright/test';
-import { AllureMeta } from './AllureMeta';
-import { Logger } from '@helper/logger/Logger';
-import * as fs from 'fs';
+import { test } from "@playwright/test";
+import * as allure from "allure-js-commons";
+import * as fs from "fs";
+import { Logger } from "../logger/Logger";
+import { AllureMeta } from "./AllureMeta";
+
+const EXPLICIT_DESCRIPTION_SET = Symbol("explicitAllureDescriptionSet");
+
+type AllureTestInfo = ReturnType<typeof test.info> & {
+  [EXPLICIT_DESCRIPTION_SET]?: boolean;
+};
 
 /**
  * AllureReporter - Enhanced Allure reporting utilities
  *
  * ENHANCEMENTS:
- * ✅ Auto-attach screenshots on failure
- * ✅ Auto-attach videos on failure
- * ✅ Support for custom attachments
- * ✅ Step wrapping with error handling
- * ✅ Metadata helpers
+ * Auto-attach screenshots on failure
+ * Auto-attach videos on failure
+ * Support for custom attachments
+ * Step wrapping with error handling
+ * Metadata helpers
  */
 export class AllureReporter {
   /**
@@ -31,64 +38,71 @@ export class AllureReporter {
    *   links: [{ name: 'Documentation', url: 'https://playwright.dev' }]
    * });
    *
-   * NOTE: Currently using annotations for all metadata since labels property
-   * is not available in this Playwright version. Future versions may support
-   * proper labels vs annotations separation.
+   * Uses the allure-js-commons runtime facade so metadata is emitted in the
+   * format expected by the `allure-playwright` reporter.
    */
   static async attachDetails(meta: AllureMeta): Promise<void> {
-    // Core Allure metadata - using annotations (labels property not available in this Playwright version)
-    // Ideally these should be labels: test.info().labels.push({ name: 'epic', value: meta.epic })
-    // But for now using annotations which Allure will still process
+    const testInfo = test.info() as AllureTestInfo;
+
+    if (meta.owner) {
+      await allure.owner(meta.owner);
+    }
     if (meta.epic) {
-      test.info().annotations.push({ type: 'epic', description: meta.epic });
+      await allure.epic(meta.epic);
     }
     if (meta.feature) {
-      test.info().annotations.push({ type: 'feature', description: meta.feature });
+      await allure.feature(meta.feature);
     }
     if (meta.severity) {
-      test.info().annotations.push({ type: 'severity', description: meta.severity });
-    }
-    if (meta.owner) {
-      test.info().annotations.push({ type: 'owner', description: meta.owner });
+      await allure.severity(meta.severity);
     }
     if (meta.component) {
-      test.info().annotations.push({ type: 'component', description: meta.component });
+      await allure.label("component", meta.component);
     }
     if (meta.story) {
-      if (Array.isArray(meta.story)) {
-        meta.story.forEach((story) =>
-          test.info().annotations.push({ type: 'story', description: story })
-        );
-      } else {
-        test.info().annotations.push({ type: 'story', description: meta.story });
+      const stories = Array.isArray(meta.story) ? meta.story : [meta.story];
+      for (const story of stories) {
+        await allure.story(story);
       }
     }
-    if (meta.tags) {
-      meta.tags.forEach((tag) => test.info().annotations.push({ type: 'tag', description: tag }));
+
+    if (meta.tags?.length) {
+      await allure.tags(...meta.tags);
     }
 
-    // External references - properly using annotations
     if (meta.issues) {
-      meta.issues.forEach((issue) =>
-        test.info().annotations.push({ type: 'issue', description: issue.id })
-      );
+      for (const issue of meta.issues) {
+        if (issue.url) {
+          await allure.issue(issue.url, issue.id);
+          continue;
+        }
+
+        await allure.label("issue", issue.id);
+      }
     }
     if (meta.tmsIds) {
-      meta.tmsIds.forEach((tmsId) =>
-        test.info().annotations.push({ type: 'tms', description: tmsId.id })
-      );
+      for (const tmsId of meta.tmsIds) {
+        if (tmsId.url) {
+          await allure.tms(tmsId.url, tmsId.id);
+          continue;
+        }
+
+        await allure.label("tms", tmsId.id);
+      }
     }
+
     if (meta.links) {
-      meta.links.forEach((link) =>
-        test.info().annotations.push({ type: 'link', description: `${link.id}: ${link.url}` })
-      );
+      for (const link of meta.links) {
+        await allure.link(link.id, link.url);
+      }
     }
     if (meta.description) {
-      test.info().annotations.push({ type: 'description', description: meta.description });
+      await allure.description(meta.description);
+      testInfo[EXPLICIT_DESCRIPTION_SET] = true;
     }
 
     Logger.info(
-      `Allure metadata attached: ${meta.epic || ''} > ${meta.feature || ''} > ${Array.isArray(meta.story) ? meta.story.join(', ') : meta.story || ''}`
+      `Allure metadata attached: ${meta.epic || ""} > ${meta.feature || ""} > ${Array.isArray(meta.story) ? meta.story.join(", ") : meta.story || ""}`
     );
   }
 
@@ -115,7 +129,7 @@ export class AllureReporter {
     try {
       let buffer: Buffer;
 
-      if (typeof screenshot === 'string') {
+      if (typeof screenshot === "string") {
         // It's a file path
         buffer = fs.readFileSync(screenshot);
       } else {
@@ -125,7 +139,7 @@ export class AllureReporter {
 
       await test.info().attach(name, {
         body: buffer,
-        contentType: 'image/png',
+        contentType: "image/png"
       });
 
       Logger.info(`Screenshot attached: ${name}`);
@@ -133,7 +147,6 @@ export class AllureReporter {
       Logger.error(`Failed to attach screenshot: ${error}`);
     }
   }
-
   /**
    * Attach video to Allure report
    *
@@ -152,13 +165,8 @@ export class AllureReporter {
       const fileSizeMB = stats.size / (1024 * 1024);
 
       if (fileSizeMB > 50) {
-        Logger.warn(
-          `Video file too large (${fileSizeMB.toFixed(2)}MB), skipping attachment: ${videoPath}`
-        );
-        await AllureReporter.attachText(
-          'video-location',
-          `Video too large to attach. Location: ${videoPath}`
-        );
+        Logger.warn(`Video file too large (${fileSizeMB.toFixed(2)}MB), skipping attachment: ${videoPath}`);
+        await AllureReporter.attachText("video-location", `Video too large to attach. Location: ${videoPath}`);
         return;
       }
 
@@ -166,7 +174,7 @@ export class AllureReporter {
 
       await test.info().attach(name, {
         body: videoBuffer,
-        contentType: 'video/webm',
+        contentType: "video/webm"
       });
 
       Logger.info(`Video attached: ${name} (${fileSizeMB.toFixed(2)}MB)`);
@@ -185,7 +193,7 @@ export class AllureReporter {
     try {
       await test.info().attach(name, {
         body: content,
-        contentType: 'text/plain',
+        contentType: "text/plain"
       });
 
       Logger.info(`Text attached: ${name}`);
@@ -193,20 +201,19 @@ export class AllureReporter {
       Logger.error(`Failed to attach text: ${error}`);
     }
   }
-
   /**
    * Attach JSON data to Allure report
    *
    * @param name - Attachment name
    * @param data - JSON data
    */
-  static async attachJSON(name: string, data: any): Promise<void> {
+  static async attachJSON(name: string, data: unknown): Promise<void> {
     try {
       const jsonString = JSON.stringify(data, null, 2);
 
       await test.info().attach(name, {
         body: jsonString,
-        contentType: 'application/json',
+        contentType: "application/json"
       });
 
       Logger.info(`JSON attached: ${name}`);
@@ -225,7 +232,7 @@ export class AllureReporter {
     try {
       await test.info().attach(name, {
         body: html,
-        contentType: 'text/html',
+        contentType: "text/html"
       });
 
       Logger.info(`HTML attached: ${name}`);
@@ -241,7 +248,7 @@ export class AllureReporter {
    * @param url - URL
    */
   static addLink(name: string, url: string): void {
-    test.info().annotations.push({ type: 'link', description: `${name}: ${url}` });
+    void allure.link(url, name);
     Logger.info(`Link added: ${name} -> ${url}`);
   }
 
@@ -250,8 +257,13 @@ export class AllureReporter {
    *
    * @param issueId - Issue ID (e.g., JIRA-123)
    */
-  static addIssue(issueId: string): void {
-    test.info().annotations.push({ type: 'issue', description: issueId });
+  static addIssue(issueId: string, url?: string): void {
+    if (url) {
+      void allure.issue(url, issueId);
+    } else {
+      void allure.label("issue", issueId);
+    }
+
     Logger.info(`Issue linked: ${issueId}`);
   }
 
@@ -260,8 +272,13 @@ export class AllureReporter {
    *
    * @param tmsId - TMS ID
    */
-  static addTMS(tmsId: string): void {
-    test.info().annotations.push({ type: 'tms', description: tmsId });
+  static addTMS(tmsId: string, url?: string): void {
+    if (url) {
+      void allure.tms(url, tmsId);
+    } else {
+      void allure.label("tms", tmsId);
+    }
+
     Logger.info(`TMS linked: ${tmsId}`);
   }
 
@@ -271,7 +288,13 @@ export class AllureReporter {
    * @param description - Test description
    */
   static async addDescription(description: string): Promise<void> {
-    test.info().annotations.push({ type: 'description', description });
+    const testInfo = test.info() as AllureTestInfo;
+
+    if (testInfo[EXPLICIT_DESCRIPTION_SET]) {
+      return;
+    }
+
+    await allure.description(description);
   }
 
   /**
@@ -280,9 +303,9 @@ export class AllureReporter {
    * @param tags - Array of tags
    */
   static async addTags(tags: string[]): Promise<void> {
-    tags.forEach((tag) => {
-      test.info().annotations.push({ type: 'tag', description: tag });
-    });
+    if (tags.length) {
+      await allure.tags(...tags);
+    }
   }
 
   /**
@@ -291,22 +314,22 @@ export class AllureReporter {
    * @param name - Attachment name
    * @param data - Array of objects or CSV string
    */
-  static async attachCSV(name: string, data: any[] | string): Promise<void> {
+  static async attachCSV(name: string, data: Array<Record<string, unknown>> | string): Promise<void> {
     try {
       let csvContent: string;
 
-      if (typeof data === 'string') {
+      if (typeof data === "string") {
         csvContent = data;
       } else {
         // Convert array of objects to CSV
         const headers = Object.keys(data[0] || {});
-        const rows = data.map((obj) => headers.map((h) => obj[h]).join(','));
-        csvContent = [headers.join(','), ...rows].join('\n');
+        const rows = data.map((obj) => headers.map((h) => obj[h]).join(","));
+        csvContent = [headers.join(","), ...rows].join("\n");
       }
 
       await test.info().attach(name, {
         body: csvContent,
-        contentType: 'text/csv',
+        contentType: "text/csv"
       });
 
       Logger.info(`CSV attached: ${name}`);
@@ -320,11 +343,11 @@ export class AllureReporter {
    */
   static logEnvironmentInfo(): void {
     const envInfo = {
-      'Node Version': process.version,
+      "Node Version": process.version,
       Platform: process.platform,
       OS: process.arch,
-      Environment: process.env.ENV || 'dev',
-      'Base URL': process.env.BASE_URL || 'Not set',
+      Environment: process.env.ENV || "dev",
+      "Base URL": process.env.BASE_URL || "Not set"
     };
 
     Logger.info(`Environment Info: ${JSON.stringify(envInfo)}`);
